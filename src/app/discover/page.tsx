@@ -178,7 +178,7 @@ export default function DiscoverPage() {
       <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-sm" style={{ color: "var(--text-muted)" }}>Loading...</div>
+          <div className="text-base" style={{ color: "var(--text-muted)" }}>Loading...</div>
         </div>
       </div>
     );
@@ -198,7 +198,7 @@ export default function DiscoverPage() {
         {/* Sort + count */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] mr-1" style={{ color: "var(--text-muted)" }}>Sort:</span>
+            <span className="text-base mr-1" style={{ color: "var(--text-muted)" }}>Sort:</span>
             {([
               { key: "sub_growth" as SortKey, label: "Sub Growth" },
               { key: "view_growth" as SortKey, label: "View Growth" },
@@ -207,7 +207,7 @@ export default function DiscoverPage() {
               <button
                 key={o.key}
                 onClick={() => setSortBy(o.key)}
-                className="px-2.5 py-1 rounded text-[11px] font-medium"
+                className="px-2.5 py-1 rounded text-base font-medium"
                 style={{
                   color: sortBy === o.key ? "var(--gold)" : "var(--text-muted)",
                   background: sortBy === o.key ? "var(--gold-bg)" : "transparent",
@@ -217,7 +217,7 @@ export default function DiscoverPage() {
               </button>
             ))}
           </div>
-          <span className="text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>
+          <span className="text-base font-mono" style={{ color: "var(--text-muted)" }}>
             {visible.length} channels
           </span>
         </div>
@@ -227,7 +227,7 @@ export default function DiscoverPage() {
 
         {visible.length === 0 ? (
           <div className="rounded-lg p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+            <p className="text-base" style={{ color: "var(--text-tertiary)" }}>
               {channels.length === 0 ? (
                 <>No channels discovered yet. Set your <a href="/settings" style={{ color: "var(--gold)" }} className="hover:underline">discovery keywords</a> to get started.</>
               ) : "You've handled all discovered channels."}
@@ -267,13 +267,13 @@ export default function DiscoverPage() {
                           <div className="min-w-0">
                             <h3 className="text-xl font-bold truncate">{ch.channel_name}</h3>
                             {t?.description && (
-                              <p className="text-sm line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                              <p className="text-base line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                                 {t.description}
                               </p>
                             )}
                           </div>
                           {t?.country && (
-                            <span className="text-xs font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
+                            <span className="text-base font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
                               {t.country}
                             </span>
                           )}
@@ -282,26 +282,26 @@ export default function DiscoverPage() {
                         {/* Stats row */}
                         <div className="flex items-center gap-5 mt-3">
                           <div>
-                            <span className="text-base font-bold font-mono">{fmtNum(subs)}</span>
-                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
+                            <span className="text-lg font-bold font-mono">{fmtNum(subs)}</span>
+                            <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
                           </div>
                           <div>
-                            <span className="text-base font-bold font-mono">{fmtNum(views)}</span>
-                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                            <span className="text-lg font-bold font-mono">{fmtNum(views)}</span>
+                            <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>views</span>
                           </div>
                           <div>
-                            <span className="text-base font-bold font-mono">{fmtNum(vids)}</span>
-                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
+                            <span className="text-lg font-bold font-mono">{fmtNum(vids)}</span>
+                            <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
                           </div>
 
                           {t?.sub_growth_pct != null && (
                             <div className="flex items-center gap-1">
-                              <span className="text-base font-bold font-mono" style={{ color: growthColor(t.sub_growth_pct) }}>
+                              <span className="text-lg font-bold font-mono" style={{ color: growthColor(t.sub_growth_pct) }}>
                                 {fmtGrowth(t.sub_growth_pct)}
                               </span>
-                              <span className="text-xs" style={{ color: "var(--text-muted)" }}>sub ↑</span>
+                              <span className="text-base" style={{ color: "var(--text-muted)" }}>sub ↑</span>
                               {t.sub_growth_raw > 0 && (
-                                <span className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
+                                <span className="text-base font-mono" style={{ color: "var(--text-muted)" }}>
                                   (+{fmtNum(t.sub_growth_raw)})
                                 </span>
                               )}
@@ -310,10 +310,10 @@ export default function DiscoverPage() {
 
                           {t?.view_growth_pct != null && (
                             <div className="flex items-center gap-1">
-                              <span className="text-base font-bold font-mono" style={{ color: growthColor(t.view_growth_pct) }}>
+                              <span className="text-lg font-bold font-mono" style={{ color: growthColor(t.view_growth_pct) }}>
                                 {fmtGrowth(t.view_growth_pct)}
                               </span>
-                              <span className="text-xs" style={{ color: "var(--text-muted)" }}>view ↑</span>
+                              <span className="text-base" style={{ color: "var(--text-muted)" }}>view ↑</span>
                             </div>
                           )}
                         </div>
@@ -321,12 +321,12 @@ export default function DiscoverPage() {
                         {/* Meta row */}
                         <div className="flex items-center gap-3 mt-2">
                           {ch.discovered_from && (
-                            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                            <span className="text-base" style={{ color: "var(--text-muted)" }}>
                               via {ch.discovered_from}
                             </span>
                           )}
                           {ch.discovered_at && (
-                            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                            <span className="text-base" style={{ color: "var(--text-muted)" }}>
                               {timeAgo(ch.discovered_at)}
                             </span>
                           )}
@@ -343,7 +343,7 @@ export default function DiscoverPage() {
                     <button
                       onClick={(e) => { e.preventDefault(); trackChannel(ch); }}
                       disabled={actionLoading === ch.channel_id}
-                      className="px-4 py-1.5 rounded text-[11px] font-medium disabled:opacity-50"
+                      className="px-4 py-1.5 rounded text-base font-medium disabled:opacity-50"
                       style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
                     >
                       {actionLoading === ch.channel_id ? "..." : "+ Track"}
@@ -351,7 +351,7 @@ export default function DiscoverPage() {
                     <button
                       onClick={(e) => { e.preventDefault(); ignoreChannel(ch.channel_id); }}
                       disabled={actionLoading === ch.channel_id}
-                      className="px-3 py-1.5 rounded text-[11px] disabled:opacity-50"
+                      className="px-3 py-1.5 rounded text-base disabled:opacity-50"
                       style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
                     >
                       Ignore
@@ -371,7 +371,7 @@ export default function DiscoverPage() {
           <div className="mt-8">
             <button
               onClick={() => setShowIgnored(!showIgnored)}
-              className="text-[11px]"
+              className="text-base"
               style={{ color: "var(--text-muted)" }}
             >
               {showIgnored ? "▾" : "▸"} {ignored.length} ignored
@@ -384,10 +384,10 @@ export default function DiscoverPage() {
                     className="rounded-md px-4 py-2.5 flex items-center justify-between opacity-50 hover:opacity-100 transition-opacity"
                     style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
                   >
-                    <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>{ch.channel_name}</span>
+                    <span className="text-base" style={{ color: "var(--text-tertiary)" }}>{ch.channel_name}</span>
                     <button
                       onClick={() => unignoreChannel(ch.channel_id)}
-                      className="text-[11px]"
+                      className="text-base"
                       style={{ color: "var(--text-muted)" }}
                     >
                       Restore

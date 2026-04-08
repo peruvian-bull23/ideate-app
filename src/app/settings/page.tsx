@@ -82,7 +82,7 @@ export default function SettingsPage() {
       <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-sm" style={{ color: "var(--text-muted)" }}>Loading...</div>
+          <div className="text-base" style={{ color: "var(--text-muted)" }}>Loading...</div>
         </div>
       </div>
     );
@@ -107,26 +107,26 @@ export default function SettingsPage() {
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Email</label>
+                <label className="block text-base font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Email</label>
                 <input
                   type="email" value={profile?.email || ""} disabled
-                  className="w-full px-3.5 py-2.5 rounded-md text-sm cursor-not-allowed"
+                  className="w-full px-3.5 py-2.5 rounded-md text-base cursor-not-allowed"
                   style={{ ...inputStyle, color: "var(--text-muted)" }}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Your YouTube Channel Name</label>
+                <label className="block text-base font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Your YouTube Channel Name</label>
                 <input
                   type="text" value={channelName} onChange={(e) => setChannelName(e.target.value)}
                   placeholder="e.g., Peruvian Bull"
-                  className="w-full px-3.5 py-2.5 rounded-md text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-md text-base"
                   style={inputStyle}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Plan</label>
+                <label className="block text-base font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Plan</label>
                 <span
-                  className="inline-block text-[11px] font-medium px-2.5 py-1 rounded"
+                  className="inline-block text-base font-medium px-2.5 py-1 rounded"
                   style={{
                     color: profile?.plan === "pro" ? "var(--gold)" : "var(--text-tertiary)",
                     background: profile?.plan === "pro" ? "var(--gold-bg)" : "var(--bg-elevated)",
@@ -145,7 +145,7 @@ export default function SettingsPage() {
             </h2>
             <select
               value={emailSchedule} onChange={(e) => setEmailSchedule(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-md text-sm"
+              className="w-full px-3.5 py-2.5 rounded-md text-base"
               style={inputStyle}
             >
               <option value="daily">Daily</option>
@@ -162,7 +162,7 @@ export default function SettingsPage() {
               Scan Settings
             </h2>
             <div>
-              <label className="block text-xs font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>
+              <label className="block text-base font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>
                 Outlier Threshold: <span className="font-mono" style={{ color: "var(--gold)" }}>{outlierThreshold.toFixed(1)}x</span>
               </label>
               <input
@@ -170,7 +170,7 @@ export default function SettingsPage() {
                 value={outlierThreshold} onChange={(e) => setOutlierThreshold(parseFloat(e.target.value))}
                 className="w-full"
               />
-              <div className="flex justify-between text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
+              <div className="flex justify-between text-base mt-1" style={{ color: "var(--text-muted)" }}>
                 <span>1.5x — More results</span>
                 <span>10x — Only top viral</span>
               </div>
@@ -184,24 +184,24 @@ export default function SettingsPage() {
             </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Your Niche</label>
+                <label className="block text-base font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Your Niche</label>
                 <input
                   type="text" value={discoveryNiche} onChange={(e) => setDiscoveryNiche(e.target.value)}
                   placeholder="e.g., finance and economics"
-                  className="w-full px-3.5 py-2.5 rounded-md text-sm"
+                  className="w-full px-3.5 py-2.5 rounded-md text-base"
                   style={inputStyle}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Discovery Keywords</label>
+                <label className="block text-base font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Discovery Keywords</label>
                 <textarea
                   value={keywords} onChange={(e) => setKeywords(e.target.value)}
                   placeholder="bitcoin, federal reserve, inflation, market crash"
                   rows={3}
-                  className="w-full px-3.5 py-2.5 rounded-md text-sm resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-md text-base resize-none"
                   style={inputStyle}
                 />
-                <p className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
+                <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>
                   Comma-separated keywords for trending video discovery
                 </p>
               </div>
@@ -212,13 +212,13 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <button
               type="submit" disabled={saving}
-              className="px-5 py-2.5 rounded-md text-sm font-medium disabled:opacity-50"
+              className="px-5 py-2.5 rounded-md text-base font-medium disabled:opacity-50"
               style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
             >
               {saving ? "Saving..." : "Save Settings"}
             </button>
             {message && (
-              <span className="text-xs font-medium" style={{ color: message === "Saved" ? "var(--green)" : "var(--red)" }}>
+              <span className="text-base font-medium" style={{ color: message === "Saved" ? "var(--green)" : "var(--red)" }}>
                 {message}
               </span>
             )}

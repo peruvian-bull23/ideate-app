@@ -109,7 +109,7 @@ export default function ChannelsPage() {
       <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-sm" style={{ color: "var(--text-muted)" }}>Loading...</div>
+          <div className="text-base" style={{ color: "var(--text-muted)" }}>Loading...</div>
         </div>
       </div>
     );
@@ -134,7 +134,7 @@ export default function ChannelsPage() {
               value={channelUrl}
               onChange={(e) => setChannelUrl(e.target.value)}
               placeholder="Paste YouTube channel URL (e.g., youtube.com/@MrBeast)"
-              className="flex-1 px-4 py-2.5 rounded-md text-sm"
+              className="flex-1 px-4 py-2.5 rounded-md text-base"
               style={{
                 background: "var(--bg-elevated)",
                 border: "1px solid var(--border-default)",
@@ -146,19 +146,19 @@ export default function ChannelsPage() {
             <button
               type="submit"
               disabled={adding}
-              className="px-5 py-2.5 rounded-md text-sm font-medium disabled:opacity-50"
+              className="px-5 py-2.5 rounded-md text-base font-medium disabled:opacity-50"
               style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
             >
               {adding ? "Adding..." : "Add Channel"}
             </button>
           </form>
-          {error && <p className="text-xs mt-2" style={{ color: "var(--red)" }}>{error}</p>}
+          {error && <p className="text-base mt-2" style={{ color: "var(--red)" }}>{error}</p>}
         </div>
 
         {/* Channel List */}
         {channels.length === 0 ? (
           <div className="rounded-lg p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+            <p className="text-base" style={{ color: "var(--text-tertiary)" }}>
               No channels yet. Add YouTube channels above to start tracking outlier videos.
             </p>
           </div>
@@ -192,13 +192,13 @@ export default function ChannelsPage() {
                           <div className="min-w-0">
                             <h3 className="text-xl font-bold truncate">{ch.channel_name}</h3>
                             {ch.description && (
-                              <p className="text-sm line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                              <p className="text-base line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                                 {ch.description}
                               </p>
                             )}
                           </div>
                           {ch.country && (
-                            <span className="text-xs font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
+                            <span className="text-base font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
                               {ch.country}
                             </span>
                           )}
@@ -207,25 +207,25 @@ export default function ChannelsPage() {
                         {/* Stats row */}
                         <div className="flex items-center gap-5 mt-3">
                           <div>
-                            <span className="text-base font-bold font-mono">{fmtNum(ch.subscriber_count)}</span>
-                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
+                            <span className="text-lg font-bold font-mono">{fmtNum(ch.subscriber_count)}</span>
+                            <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
                           </div>
                           <div>
-                            <span className="text-base font-bold font-mono">{fmtNum(ch.total_view_count)}</span>
-                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                            <span className="text-lg font-bold font-mono">{fmtNum(ch.total_view_count)}</span>
+                            <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>views</span>
                           </div>
                           <div>
-                            <span className="text-base font-bold font-mono">{fmtNum(ch.video_count)}</span>
-                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
+                            <span className="text-lg font-bold font-mono">{fmtNum(ch.video_count)}</span>
+                            <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
                           </div>
                         </div>
 
                         {/* Meta row */}
                         <div className="flex items-center gap-3 mt-2">
-                          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                          <span className="text-base" style={{ color: "var(--text-muted)" }}>
                             {timeAgo(ch.added_at)}
                           </span>
-                          <span className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
+                          <span className="text-base font-mono" style={{ color: "var(--text-muted)" }}>
                             {ch.channel_id}
                           </span>
                         </div>
@@ -240,7 +240,7 @@ export default function ChannelsPage() {
                   >
                     <button
                       onClick={(e) => removeChannel(e, ch.channel_id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-medium"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-base font-medium"
                       style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.background = "var(--red-bg)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "var(--bg-elevated)"; }}
@@ -257,7 +257,7 @@ export default function ChannelsPage() {
           </div>
         )}
 
-        <div className="mt-6 text-center text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>
+        <div className="mt-6 text-center text-base font-mono" style={{ color: "var(--text-muted)" }}>
           {channels.length} channel{channels.length !== 1 ? "s" : ""} tracked
         </div>
       </main>

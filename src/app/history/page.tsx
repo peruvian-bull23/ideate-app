@@ -100,7 +100,7 @@ export default function HistoryPage() {
       <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-sm" style={{ color: "var(--text-muted)" }}>Loading...</div>
+          <div className="text-base" style={{ color: "var(--text-muted)" }}>Loading...</div>
         </div>
       </div>
     );
@@ -122,7 +122,7 @@ export default function HistoryPage() {
 
         {sortedDates.length === 0 ? (
           <div className="rounded-lg p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+            <p className="text-base" style={{ color: "var(--text-tertiary)" }}>
               No history yet. Results will appear after your first scan.
             </p>
           </div>
@@ -142,12 +142,12 @@ export default function HistoryPage() {
                       {formatDate(date)}
                     </h2>
                     {day.outliers.length > 0 && (
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded" style={{ color: "var(--gold)", background: "var(--gold-bg)" }}>
+                      <span className="text-base font-mono px-2 py-0.5 rounded" style={{ color: "var(--gold)", background: "var(--gold-bg)" }}>
                         {day.outliers.length} outlier{day.outliers.length !== 1 ? "s" : ""}
                       </span>
                     )}
                     {day.trending.length > 0 && (
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded" style={{ color: "var(--cyan)", background: "var(--cyan-bg)" }}>
+                      <span className="text-base font-mono px-2 py-0.5 rounded" style={{ color: "var(--cyan)", background: "var(--cyan-bg)" }}>
                         {day.trending.length} trending
                       </span>
                     )}
@@ -173,22 +173,22 @@ export default function HistoryPage() {
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-3">
-                                <a href={r.link} target="_blank" rel="noopener noreferrer" className="text-base font-semibold hover:text-[var(--gold)] transition-colors line-clamp-1">
+                                <a href={r.link} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold hover:text-[var(--gold)] transition-colors line-clamp-1">
                                   {r.title}
                                 </a>
                                 <div className="flex items-center gap-3 shrink-0">
-                                  <span className="text-xs font-mono font-semibold">{fmtNum(r.view_count)}</span>
-                                  <span className="text-xs font-mono font-semibold" style={{ color: "var(--gold)" }}>
+                                  <span className="text-base font-mono font-semibold">{fmtNum(r.view_count)}</span>
+                                  <span className="text-base font-mono font-semibold" style={{ color: "var(--gold)" }}>
                                     {r.outlier_score.toFixed(1)}x
                                   </span>
-                                  <span className="text-xs font-semibold px-2 py-0.5 rounded" style={sentimentStyle(r.sentiment)}>
+                                  <span className="text-base font-semibold px-2 py-0.5 rounded" style={sentimentStyle(r.sentiment)}>
                                     {r.sentiment?.toUpperCase() || "NEUTRAL"}
                                   </span>
                                 </div>
                               </div>
-                              <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>{r.channel_name}</p>
+                              <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>{r.channel_name}</p>
                               {r.summary && (
-                                <p className="text-sm mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                                <p className="text-base mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                                   {r.summary}
                                 </p>
                               )}
@@ -203,7 +203,7 @@ export default function HistoryPage() {
                   {day.trending.length > 0 && (
                     <div className="space-y-2">
                       {day.outliers.length > 0 && (
-                        <p className="text-[10px] font-semibold uppercase tracking-wider mt-2 mb-2" style={{ color: "var(--text-muted)" }}>
+                        <p className="text-base font-semibold uppercase tracking-wider mt-2 mb-2" style={{ color: "var(--text-muted)" }}>
                           Trending
                         </p>
                       )}
@@ -228,17 +228,17 @@ export default function HistoryPage() {
                             ) : null}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-3">
-                                <a href={v.link} target="_blank" rel="noopener noreferrer" className="text-base font-semibold hover:text-[var(--gold)] transition-colors line-clamp-1">
+                                <a href={v.link} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold hover:text-[var(--gold)] transition-colors line-clamp-1">
                                   {v.title}
                                 </a>
                                 <div className="flex items-center gap-3 shrink-0">
-                                  <span className="text-xs font-mono font-semibold">{fmtNum(v.view_count)}</span>
-                                  <span className="text-xs font-mono font-semibold" style={{ color: "var(--cyan)" }}>
+                                  <span className="text-base font-mono font-semibold">{fmtNum(v.view_count)}</span>
+                                  <span className="text-base font-mono font-semibold" style={{ color: "var(--cyan)" }}>
                                     {fmtVPH(v.views_per_hour)}
                                   </span>
                                   {v.relevance_score > 0 && (
                                     <span
-                                      className="text-xs font-mono font-medium px-2 py-0.5 rounded"
+                                      className="text-base font-mono font-medium px-2 py-0.5 rounded"
                                       style={{
                                         color: v.relevance_score >= 8 ? "var(--green)" : v.relevance_score >= 5 ? "var(--gold)" : "var(--text-tertiary)",
                                         background: v.relevance_score >= 8 ? "var(--green-bg)" : v.relevance_score >= 5 ? "var(--gold-bg)" : "var(--bg-elevated)",
@@ -249,9 +249,9 @@ export default function HistoryPage() {
                                   )}
                                 </div>
                               </div>
-                              <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>{v.channel_name}</p>
+                              <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>{v.channel_name}</p>
                               {v.relevance_reason && (
-                                <p className="text-sm mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                                <p className="text-base mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                                   {v.relevance_reason}
                                 </p>
                               )}
@@ -267,7 +267,7 @@ export default function HistoryPage() {
           </div>
         )}
 
-        <div className="mt-8 text-center text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>
+        <div className="mt-8 text-center text-base font-mono" style={{ color: "var(--text-muted)" }}>
           {totalResults} result{totalResults !== 1 ? "s" : ""}
         </div>
       </main>

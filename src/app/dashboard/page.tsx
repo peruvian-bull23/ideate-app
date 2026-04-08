@@ -114,7 +114,7 @@ export default function DashboardPage() {
       <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div style={{ color: "var(--text-muted)" }} className="text-sm">Loading...</div>
+          <div style={{ color: "var(--text-muted)" }} className="text-base">Loading...</div>
         </div>
       </div>
     );
@@ -130,7 +130,7 @@ export default function DashboardPage() {
           <h1 className="text-4xl font-bold tracking-tight">
             Welcome back{profile?.youtube_channel_name ? `, ${profile.youtube_channel_name}` : ""}
           </h1>
-          <p style={{ color: "var(--text-tertiary)" }} className="text-sm mt-1">
+          <p style={{ color: "var(--text-tertiary)" }} className="text-base mt-1">
             Your daily briefing
           </p>
         </div>
@@ -151,7 +151,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-semibold font-mono" style={{ color: stat.color }}>
                 {stat.value}
               </div>
-              <div className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+              <div className="text-base mt-1" style={{ color: "var(--text-muted)" }}>
                 {stat.label}
               </div>
             </div>
@@ -177,11 +177,11 @@ export default function DashboardPage() {
                 <div>
                   <h3 className="font-semibold text-[15px]">{profile.my_channel_name}</h3>
                   <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                    <span className="text-base" style={{ color: "var(--text-tertiary)" }}>
                       {fmtNum(profile.my_channel_subs || 0)} subscribers
                     </span>
                     <span style={{ color: "var(--text-muted)" }}>·</span>
-                    <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                    <span className="text-base" style={{ color: "var(--text-tertiary)" }}>
                       {fmtNum(profile.my_channel_views || 0)} views
                     </span>
                   </div>
@@ -205,10 +205,10 @@ export default function DashboardPage() {
                           className="w-full aspect-video object-cover rounded-md mb-2 group-hover:opacity-80 transition-opacity"
                         />
                       )}
-                      <p className="text-xs font-medium line-clamp-2 leading-snug group-hover:text-[var(--gold)] transition-colors">
+                      <p className="text-base font-medium line-clamp-2 leading-snug group-hover:text-[var(--gold)] transition-colors">
                         {v.title}
                       </p>
-                      <p className="text-[11px] mt-1 font-mono" style={{ color: "var(--text-muted)" }}>
+                      <p className="text-base mt-1 font-mono" style={{ color: "var(--text-muted)" }}>
                         {fmtNum(v.view_count)} views
                       </p>
                     </a>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
               className="rounded-lg p-10 text-center"
               style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
             >
-              <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+              <p className="text-base" style={{ color: "var(--text-tertiary)" }}>
                 No outliers found today.
                 {channelCount === 0 && (
                   <> <a href="/channels" style={{ color: "var(--gold)" }} className="hover:underline">Add channels</a> to start scanning.</>
@@ -266,29 +266,29 @@ export default function DashboardPage() {
                           {r.title}
                         </a>
                         <span
-                          className="shrink-0 px-2.5 py-0.5 rounded text-[11px] font-medium"
+                          className="shrink-0 px-2.5 py-0.5 rounded text-base font-medium"
                           style={sentimentStyle(r.sentiment)}
                         >
                           {r.sentiment?.toUpperCase() || "NEUTRAL"}
                         </span>
                       </div>
-                      <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>{r.channel_name}</p>
+                      <p className="text-base mt-1" style={{ color: "var(--text-tertiary)" }}>{r.channel_name}</p>
 
                       <div className="flex items-center gap-5 mt-3">
                         <div>
-                          <span className="text-base font-bold font-mono">{fmtNum(r.view_count)}</span>
-                          <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                          <span className="text-lg font-bold font-mono">{fmtNum(r.view_count)}</span>
+                          <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>views</span>
                         </div>
                         <div>
-                          <span className="text-base font-bold font-mono" style={{ color: "var(--gold)" }}>
+                          <span className="text-lg font-bold font-mono" style={{ color: "var(--gold)" }}>
                             {r.outlier_score.toFixed(1)}x
                           </span>
-                          <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>score</span>
+                          <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>score</span>
                         </div>
                       </div>
 
                       {r.summary && (
-                        <p className="text-sm mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                        <p className="text-base mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                           {r.summary}
                         </p>
                       )}
@@ -296,7 +296,7 @@ export default function DashboardPage() {
                       {r.key_claims && r.key_claims.length > 0 && (
                         <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
                           {r.key_claims.slice(0, 3).map((c, i) => (
-                            <p key={i} className="text-[11px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                            <p key={i} className="text-base leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                               → {c}
                             </p>
                           ))}
@@ -317,7 +317,7 @@ export default function DashboardPage() {
               Trending in Your Niche
             </h2>
             {trending.length > 0 && (
-              <span className="text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>
+              <span className="text-base font-mono" style={{ color: "var(--text-muted)" }}>
                 {trending.length} videos
               </span>
             )}
@@ -328,7 +328,7 @@ export default function DashboardPage() {
               className="rounded-lg p-10 text-center"
               style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
             >
-              <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+              <p className="text-base" style={{ color: "var(--text-tertiary)" }}>
                 No trending videos today. Set your{" "}
                 <a href="/settings" style={{ color: "var(--gold)" }} className="hover:underline">discovery keywords</a>
                 {" "}to get started.
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                         </a>
                         {v.relevance_score > 0 && (
                           <div
-                            className="shrink-0 text-sm font-mono font-bold px-2 py-0.5 rounded"
+                            className="shrink-0 text-base font-mono font-bold px-2 py-0.5 rounded"
                             style={{
                               color: v.relevance_score >= 8 ? "var(--green)" : v.relevance_score >= 5 ? "var(--gold)" : "var(--text-tertiary)",
                               background: v.relevance_score >= 8 ? "var(--green-bg)" : v.relevance_score >= 5 ? "var(--gold-bg)" : "var(--bg-elevated)",
@@ -370,21 +370,21 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </div>
-                      <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>{v.channel_name}</p>
+                      <p className="text-base mt-1" style={{ color: "var(--text-tertiary)" }}>{v.channel_name}</p>
 
                       <div className="flex items-center gap-5 mt-3">
                         <div>
-                          <span className="text-base font-bold font-mono">{fmtNum(v.view_count)}</span>
-                          <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                          <span className="text-lg font-bold font-mono">{fmtNum(v.view_count)}</span>
+                          <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>views</span>
                         </div>
                         <div>
-                          <span className="text-base font-bold font-mono" style={{ color: "var(--cyan)" }}>{fmtVPH(v.views_per_hour)}</span>
-                          <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>velocity</span>
+                          <span className="text-lg font-bold font-mono" style={{ color: "var(--cyan)" }}>{fmtVPH(v.views_per_hour)}</span>
+                          <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>velocity</span>
                         </div>
                       </div>
 
                       {v.relevance_reason && (
-                        <p className="text-sm mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                        <p className="text-base mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                           {v.relevance_reason}
                         </p>
                       )}
