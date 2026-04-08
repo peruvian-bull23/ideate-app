@@ -10,7 +10,10 @@ interface Channel {
   channel_name: string;
   subscriber_count: number;
   video_count: number;
+  total_view_count: number;
   thumbnail_url: string | null;
+  description: string | null;
+  country: string | null;
   added_at: string;
 }
 
@@ -69,7 +72,9 @@ export default function ChannelsPage() {
     setAdding(false);
   }
 
-  async function removeChannel(channelId: string) {
+  async function removeChannel(e: React.MouseEvent, channelId: string) {
+    e.preventDefault();
+    e.stopPropagation();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     await supabase.from("user_channels").delete().eq("user_id", user.id).eq("channel_id", channelId);
@@ -81,6 +86,22 @@ export default function ChannelsPage() {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
     if (n >= 1000) return (n / 1000).toFixed(0) + "K";
     return n.toString();
+  };
+
+  const channelUrl2 = (id: string, name: string) => {
+    if (id.startsWith("UC")) return `https://www.youtube.com/channel/${id}`;
+    return `https://www.youtube.com/@${name.replace(/\s+/g, "")}`;
+  };
+
+  const timeAgo = (dateStr: string) => {
+    if (!dateStr) return "";
+    const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+    if (days === 0) return "Added today";
+    if (days === 1) return "Added yesterday";
+    if (days < 7) return `Added ${days}d ago`;
+    if (days < 30) return `Added ${Math.floor(days / 7)}w ago`;
+    if (days < 365) return `Added ${Math.floor(days / 30)}mo ago`;
+    return `Added ${Math.floor(days / 365)}y ago`;
   };
 
   if (loading) {
@@ -142,49 +163,97 @@ export default function ChannelsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {channels.map((ch) => (
-              <div
-                key={ch.id}
-                className="rounded-lg px-5 py-4 flex items-center justify-between"
-                style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
-              >
-                <div className="flex items-center gap-3.5">
-                  {ch.thumbnail_url ? (
-                    <img src={ch.thumbnail_url} alt="" className="w-10 h-10 rounded-full object-cover" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full" style={{ background: "var(--bg-elevated)" }} />
-                  )}
-                  <div>
-                    <h3 className="text-sm font-medium">{ch.channel_name}</h3>
-                    <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>{ch.channel_id}</p>
-                  </div>
-                </div>
+          <div className="space-y-3">
+            {channels.map((ch) => {
+              const url = channelUrl2(ch.channel_id, ch.channel_name);
 
-                <div className="flex items-center gap-6">
-                  <div className="text-right">
-                    <div className="text-sm font-semibold font-mono">{fmtNum(ch.subscriber_count)}</div>
-                    <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>Subs</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-semibold font-mono">{fmtNum(ch.video_count)}</div>
-                    <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>Videos</div>
-                  </div>
-                  <button
-                    onClick={() => removeChannel(ch.channel_id)}
-                    className="p-1.5 rounded-md"
-                    style={{ color: "var(--text-muted)" }}
-                    title="Remove channel"
-                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.background = "var(--red-bg)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "transparent"; }}
+              return (
+                <div
+                  key={ch.id}
+                  className="rounded-lg overflow-hidden"
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+                >
+                  {/* Clickable card body */}
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-5 py-5 hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                    </svg>
-                  </button>
+                    <div className="flex items-start gap-4">
+                      {ch.thumbnail_url ? (
+                        <img src={ch.thumbnail_url} alt="" className="w-14 h-14 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full shrink-0" style={{ background: "var(--bg-elevated)" }} />
+                      )}
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <h3 className="text-[15px] font-semibold truncate">{ch.channel_name}</h3>
+                            {ch.description && (
+                              <p className="text-xs line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                                {ch.description}
+                              </p>
+                            )}
+                          </div>
+                          {ch.country && (
+                            <span className="text-[10px] font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
+                              {ch.country}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Stats row */}
+                        <div className="flex items-center gap-5 mt-3">
+                          <div>
+                            <span className="text-sm font-semibold font-mono">{fmtNum(ch.subscriber_count)}</span>
+                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold font-mono">{fmtNum(ch.total_view_count)}</span>
+                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold font-mono">{fmtNum(ch.video_count)}</span>
+                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
+                          </div>
+                        </div>
+
+                        {/* Meta row */}
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                            {timeAgo(ch.added_at)}
+                          </span>
+                          <span className="text-[10px] font-mono" style={{ color: "var(--text-muted)" }}>
+                            {ch.channel_id}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+
+                  {/* Action bar */}
+                  <div
+                    className="flex items-center justify-end px-5 py-2.5"
+                    style={{ borderTop: "1px solid var(--border-subtle)" }}
+                  >
+                    <button
+                      onClick={(e) => removeChannel(e, ch.channel_id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[11px] font-medium"
+                      style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.background = "var(--red-bg)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "var(--bg-elevated)"; }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                      </svg>
+                      Remove
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
