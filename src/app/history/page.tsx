@@ -114,7 +114,7 @@ export default function HistoryPage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">History</h1>
+          <h1 className="text-4xl font-bold tracking-tight">History</h1>
           <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
             Browse past outliers and trending videos
           </p>
@@ -127,11 +127,15 @@ export default function HistoryPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-10">
-            {sortedDates.map((date) => {
+          <div className="space-y-0">
+            {sortedDates.map((date, idx) => {
               const day = days.get(date)!;
               return (
                 <div key={date}>
+                  {/* Divider between days */}
+                  {idx > 0 && (
+                    <div className="my-8" style={{ borderTop: "1px solid var(--border-default)" }} />
+                  )}
                   {/* Date header */}
                   <div className="flex items-center gap-3 mb-4">
                     <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>

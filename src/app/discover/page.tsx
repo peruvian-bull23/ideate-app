@@ -139,7 +139,7 @@ export default function DiscoverPage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Discover</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Discover</h1>
           <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
             Find growing channels in your niche to track
           </p>

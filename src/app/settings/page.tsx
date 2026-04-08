@@ -93,7 +93,7 @@ export default function SettingsPage() {
       <Navbar />
       <main className="max-w-2xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Settings</h1>
           <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
             Manage your account and preferences
           </p>

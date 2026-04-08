@@ -127,7 +127,7 @@ export default function DashboardPage() {
       <main className="max-w-6xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-4xl font-bold tracking-tight">
             Welcome back{profile?.youtube_channel_name ? `, ${profile.youtube_channel_name}` : ""}
           </h1>
           <p style={{ color: "var(--text-tertiary)" }} className="text-sm mt-1">

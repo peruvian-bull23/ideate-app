@@ -99,7 +99,7 @@ export default function ChannelsPage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Channels</h1>
+          <h1 className="text-4xl font-bold tracking-tight">Channels</h1>
           <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
             Manage the YouTube channels you&apos;re tracking
           </p>
