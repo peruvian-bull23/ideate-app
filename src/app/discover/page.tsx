@@ -190,7 +190,7 @@ export default function DiscoverPage() {
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight">Discover</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+          <p className="text-lg mt-1" style={{ color: "var(--text-tertiary)" }}>
             Find growing channels in your niche to track
           </p>
         </div>
@@ -265,15 +265,15 @@ export default function DiscoverPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <h3 className="text-[15px] font-semibold truncate">{ch.channel_name}</h3>
+                            <h3 className="text-xl font-bold truncate">{ch.channel_name}</h3>
                             {t?.description && (
-                              <p className="text-xs line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                              <p className="text-sm line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                                 {t.description}
                               </p>
                             )}
                           </div>
                           {t?.country && (
-                            <span className="text-[10px] font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
+                            <span className="text-xs font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
                               {t.country}
                             </span>
                           )}
@@ -282,26 +282,26 @@ export default function DiscoverPage() {
                         {/* Stats row */}
                         <div className="flex items-center gap-5 mt-3">
                           <div>
-                            <span className="text-sm font-semibold font-mono">{fmtNum(subs)}</span>
-                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
+                            <span className="text-base font-bold font-mono">{fmtNum(subs)}</span>
+                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
                           </div>
                           <div>
-                            <span className="text-sm font-semibold font-mono">{fmtNum(views)}</span>
-                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                            <span className="text-base font-bold font-mono">{fmtNum(views)}</span>
+                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>views</span>
                           </div>
                           <div>
-                            <span className="text-sm font-semibold font-mono">{fmtNum(vids)}</span>
-                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
+                            <span className="text-base font-bold font-mono">{fmtNum(vids)}</span>
+                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
                           </div>
 
                           {t?.sub_growth_pct != null && (
                             <div className="flex items-center gap-1">
-                              <span className="text-sm font-semibold font-mono" style={{ color: growthColor(t.sub_growth_pct) }}>
+                              <span className="text-base font-bold font-mono" style={{ color: growthColor(t.sub_growth_pct) }}>
                                 {fmtGrowth(t.sub_growth_pct)}
                               </span>
-                              <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>sub ↑</span>
+                              <span className="text-xs" style={{ color: "var(--text-muted)" }}>sub ↑</span>
                               {t.sub_growth_raw > 0 && (
-                                <span className="text-[10px] font-mono" style={{ color: "var(--text-muted)" }}>
+                                <span className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
                                   (+{fmtNum(t.sub_growth_raw)})
                                 </span>
                               )}
@@ -310,10 +310,10 @@ export default function DiscoverPage() {
 
                           {t?.view_growth_pct != null && (
                             <div className="flex items-center gap-1">
-                              <span className="text-sm font-semibold font-mono" style={{ color: growthColor(t.view_growth_pct) }}>
+                              <span className="text-base font-bold font-mono" style={{ color: growthColor(t.view_growth_pct) }}>
                                 {fmtGrowth(t.view_growth_pct)}
                               </span>
-                              <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>view ↑</span>
+                              <span className="text-xs" style={{ color: "var(--text-muted)" }}>view ↑</span>
                             </div>
                           )}
                         </div>
@@ -321,12 +321,12 @@ export default function DiscoverPage() {
                         {/* Meta row */}
                         <div className="flex items-center gap-3 mt-2">
                           {ch.discovered_from && (
-                            <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                               via {ch.discovered_from}
                             </span>
                           )}
                           {ch.discovered_at && (
-                            <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                               {timeAgo(ch.discovered_at)}
                             </span>
                           )}

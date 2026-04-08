@@ -121,7 +121,7 @@ export default function ChannelsPage() {
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight">Channels</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+          <p className="text-lg mt-1" style={{ color: "var(--text-tertiary)" }}>
             Manage the YouTube channels you&apos;re tracking
           </p>
         </div>
@@ -190,15 +190,15 @@ export default function ChannelsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <h3 className="text-[15px] font-semibold truncate">{ch.channel_name}</h3>
+                            <h3 className="text-xl font-bold truncate">{ch.channel_name}</h3>
                             {ch.description && (
-                              <p className="text-xs line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                              <p className="text-sm line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                                 {ch.description}
                               </p>
                             )}
                           </div>
                           {ch.country && (
-                            <span className="text-[10px] font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
+                            <span className="text-xs font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
                               {ch.country}
                             </span>
                           )}
@@ -207,25 +207,25 @@ export default function ChannelsPage() {
                         {/* Stats row */}
                         <div className="flex items-center gap-5 mt-3">
                           <div>
-                            <span className="text-sm font-semibold font-mono">{fmtNum(ch.subscriber_count)}</span>
-                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
+                            <span className="text-base font-bold font-mono">{fmtNum(ch.subscriber_count)}</span>
+                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
                           </div>
                           <div>
-                            <span className="text-sm font-semibold font-mono">{fmtNum(ch.total_view_count)}</span>
-                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                            <span className="text-base font-bold font-mono">{fmtNum(ch.total_view_count)}</span>
+                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>views</span>
                           </div>
                           <div>
-                            <span className="text-sm font-semibold font-mono">{fmtNum(ch.video_count)}</span>
-                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
+                            <span className="text-base font-bold font-mono">{fmtNum(ch.video_count)}</span>
+                            <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
                           </div>
                         </div>
 
                         {/* Meta row */}
                         <div className="flex items-center gap-3 mt-2">
-                          <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                             {timeAgo(ch.added_at)}
                           </span>
-                          <span className="text-[10px] font-mono" style={{ color: "var(--text-muted)" }}>
+                          <span className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
                             {ch.channel_id}
                           </span>
                         </div>

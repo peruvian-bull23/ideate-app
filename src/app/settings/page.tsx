@@ -94,7 +94,7 @@ export default function SettingsPage() {
       <main className="max-w-2xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight">Settings</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+          <p className="text-lg mt-1" style={{ color: "var(--text-tertiary)" }}>
             Manage your account and preferences
           </p>
         </div>
@@ -102,7 +102,7 @@ export default function SettingsPage() {
         <form onSubmit={saveSettings} className="space-y-6">
           {/* Account */}
           <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Account
             </h2>
             <div className="space-y-4">
@@ -140,7 +140,7 @@ export default function SettingsPage() {
 
           {/* Email */}
           <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Email Schedule
             </h2>
             <select
@@ -158,7 +158,7 @@ export default function SettingsPage() {
 
           {/* Scan */}
           <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Scan Settings
             </h2>
             <div>
@@ -179,7 +179,7 @@ export default function SettingsPage() {
 
           {/* Discovery */}
           <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Discovery
             </h2>
             <div className="space-y-4">

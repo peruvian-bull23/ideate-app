@@ -151,7 +151,7 @@ export default function DashboardPage() {
               <div className="text-2xl font-semibold font-mono" style={{ color: stat.color }}>
                 {stat.value}
               </div>
-              <div className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+              <div className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
                 {stat.label}
               </div>
             </div>
@@ -161,7 +161,7 @@ export default function DashboardPage() {
         {/* My Channel */}
         {profile?.my_channel_name && (
           <section className="mb-10">
-            <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+            <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Your Channel
             </h2>
             <div
@@ -221,7 +221,7 @@ export default function DashboardPage() {
 
         {/* Outliers */}
         <section className="mb-10">
-          <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+          <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
             Today&apos;s Outliers
           </h2>
 
@@ -272,15 +272,15 @@ export default function DashboardPage() {
                           {r.sentiment?.toUpperCase() || "NEUTRAL"}
                         </span>
                       </div>
-                      <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>{r.channel_name}</p>
+                      <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>{r.channel_name}</p>
 
                       <div className="flex items-center gap-5 mt-3">
                         <div>
-                          <span className="text-sm font-semibold font-mono">{fmtNum(r.view_count)}</span>
+                          <span className="text-base font-bold font-mono">{fmtNum(r.view_count)}</span>
                           <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
                         </div>
                         <div>
-                          <span className="text-sm font-semibold font-mono" style={{ color: "var(--gold)" }}>
+                          <span className="text-base font-bold font-mono" style={{ color: "var(--gold)" }}>
                             {r.outlier_score.toFixed(1)}x
                           </span>
                           <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>score</span>
@@ -288,7 +288,7 @@ export default function DashboardPage() {
                       </div>
 
                       {r.summary && (
-                        <p className="text-xs mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                        <p className="text-sm mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                           {r.summary}
                         </p>
                       )}
@@ -313,7 +313,7 @@ export default function DashboardPage() {
         {/* Trending */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+            <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
               Trending in Your Niche
             </h2>
             {trending.length > 0 && (
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                         </a>
                         {v.relevance_score > 0 && (
                           <div
-                            className="shrink-0 text-[11px] font-mono font-medium px-2 py-0.5 rounded"
+                            className="shrink-0 text-sm font-mono font-bold px-2 py-0.5 rounded"
                             style={{
                               color: v.relevance_score >= 8 ? "var(--green)" : v.relevance_score >= 5 ? "var(--gold)" : "var(--text-tertiary)",
                               background: v.relevance_score >= 8 ? "var(--green-bg)" : v.relevance_score >= 5 ? "var(--gold-bg)" : "var(--bg-elevated)",
@@ -370,21 +370,21 @@ export default function DashboardPage() {
                           </div>
                         )}
                       </div>
-                      <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>{v.channel_name}</p>
+                      <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>{v.channel_name}</p>
 
                       <div className="flex items-center gap-5 mt-3">
                         <div>
-                          <span className="text-sm font-semibold font-mono">{fmtNum(v.view_count)}</span>
+                          <span className="text-base font-bold font-mono">{fmtNum(v.view_count)}</span>
                           <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
                         </div>
                         <div>
-                          <span className="text-sm font-semibold font-mono" style={{ color: "var(--cyan)" }}>{fmtVPH(v.views_per_hour)}</span>
+                          <span className="text-base font-bold font-mono" style={{ color: "var(--cyan)" }}>{fmtVPH(v.views_per_hour)}</span>
                           <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>velocity</span>
                         </div>
                       </div>
 
                       {v.relevance_reason && (
-                        <p className="text-xs mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                        <p className="text-sm mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                           {v.relevance_reason}
                         </p>
                       )}

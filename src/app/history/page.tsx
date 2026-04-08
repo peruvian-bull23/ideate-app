@@ -115,7 +115,7 @@ export default function HistoryPage() {
       <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold tracking-tight">History</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+          <p className="text-lg mt-1" style={{ color: "var(--text-tertiary)" }}>
             Browse past outliers and trending videos
           </p>
         </div>
@@ -138,7 +138,7 @@ export default function HistoryPage() {
                   )}
                   {/* Date header */}
                   <div className="flex items-center gap-3 mb-4">
-                    <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
+                    <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
                       {formatDate(date)}
                     </h2>
                     {day.outliers.length > 0 && (
@@ -173,7 +173,7 @@ export default function HistoryPage() {
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-3">
-                                <a href={r.link} target="_blank" rel="noopener noreferrer" className="text-[13px] font-medium hover:text-[var(--gold)] transition-colors line-clamp-1">
+                                <a href={r.link} target="_blank" rel="noopener noreferrer" className="text-base font-semibold hover:text-[var(--gold)] transition-colors line-clamp-1">
                                   {r.title}
                                 </a>
                                 <div className="flex items-center gap-3 shrink-0">
@@ -181,14 +181,14 @@ export default function HistoryPage() {
                                   <span className="text-xs font-mono font-semibold" style={{ color: "var(--gold)" }}>
                                     {r.outlier_score.toFixed(1)}x
                                   </span>
-                                  <span className="text-[10px] font-medium px-2 py-0.5 rounded" style={sentimentStyle(r.sentiment)}>
+                                  <span className="text-xs font-semibold px-2 py-0.5 rounded" style={sentimentStyle(r.sentiment)}>
                                     {r.sentiment?.toUpperCase() || "NEUTRAL"}
                                   </span>
                                 </div>
                               </div>
-                              <p className="text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>{r.channel_name}</p>
+                              <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>{r.channel_name}</p>
                               {r.summary && (
-                                <p className="text-xs mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                                <p className="text-sm mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                                   {r.summary}
                                 </p>
                               )}
@@ -228,7 +228,7 @@ export default function HistoryPage() {
                             ) : null}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-3">
-                                <a href={v.link} target="_blank" rel="noopener noreferrer" className="text-[13px] font-medium hover:text-[var(--gold)] transition-colors line-clamp-1">
+                                <a href={v.link} target="_blank" rel="noopener noreferrer" className="text-base font-semibold hover:text-[var(--gold)] transition-colors line-clamp-1">
                                   {v.title}
                                 </a>
                                 <div className="flex items-center gap-3 shrink-0">
@@ -238,7 +238,7 @@ export default function HistoryPage() {
                                   </span>
                                   {v.relevance_score > 0 && (
                                     <span
-                                      className="text-[10px] font-mono font-medium px-2 py-0.5 rounded"
+                                      className="text-xs font-mono font-medium px-2 py-0.5 rounded"
                                       style={{
                                         color: v.relevance_score >= 8 ? "var(--green)" : v.relevance_score >= 5 ? "var(--gold)" : "var(--text-tertiary)",
                                         background: v.relevance_score >= 8 ? "var(--green-bg)" : v.relevance_score >= 5 ? "var(--gold-bg)" : "var(--bg-elevated)",
@@ -249,9 +249,9 @@ export default function HistoryPage() {
                                   )}
                                 </div>
                               </div>
-                              <p className="text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>{v.channel_name}</p>
+                              <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>{v.channel_name}</p>
                               {v.relevance_reason && (
-                                <p className="text-xs mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                                <p className="text-sm mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
                                   {v.relevance_reason}
                                 </p>
                               )}
