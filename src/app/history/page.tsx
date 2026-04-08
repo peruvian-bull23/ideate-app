@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 
 interface Result {
   id: number;
+  video_id: string;
   title: string;
   channel_name: string;
   view_count: number;
@@ -132,37 +133,51 @@ export default function HistoryPage() {
                       key={result.id}
                       className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-colors"
                     >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
+                      <div className="flex items-start gap-4">
+                        {result.video_id && (
                           <a
                             href={result.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-semibold hover:text-indigo-400 transition-colors"
+                            className="shrink-0"
                           >
-                            {result.title}
+                            <img
+                              src={`https://img.youtube.com/vi/${result.video_id}/mqdefault.jpg`}
+                              alt={result.title}
+                              className="w-36 h-[81px] object-cover rounded-lg"
+                            />
                           </a>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4">
+                            <a
+                              href={result.link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-semibold hover:text-indigo-400 transition-colors"
+                            >
+                              {result.title}
+                            </a>
+                            <div className="flex items-center gap-4 shrink-0">
+                              <div className="text-right">
+                                <div className="font-semibold">{formatViews(result.view_count)}</div>
+                                <div className="text-gray-500 text-xs">Views</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-semibold text-indigo-400">{result.outlier_score.toFixed(1)}x</div>
+                                <div className="text-gray-500 text-xs">Score</div>
+                              </div>
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getSentimentColor(result.sentiment)}`}>
+                                {result.sentiment?.toUpperCase() || "NEUTRAL"}
+                              </span>
+                            </div>
+                          </div>
                           <p className="text-gray-500 text-sm mt-1">{result.channel_name}</p>
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div className="font-semibold">{formatViews(result.view_count)}</div>
-                            <div className="text-gray-500 text-xs">Views</div>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-semibold text-indigo-400">{result.outlier_score.toFixed(1)}x</div>
-                            <div className="text-gray-500 text-xs">Score</div>
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getSentimentColor(result.sentiment)}`}>
-                            {result.sentiment?.toUpperCase() || "NEUTRAL"}
-                          </span>
+                          {result.summary && (
+                            <p className="text-gray-400 text-sm mt-2 line-clamp-2">{result.summary}</p>
+                          )}
                         </div>
                       </div>
-
-                      {result.summary && (
-                        <p className="text-gray-400 text-sm mt-3 line-clamp-2">{result.summary}</p>
-                      )}
                     </div>
                   ))}
                 </div>

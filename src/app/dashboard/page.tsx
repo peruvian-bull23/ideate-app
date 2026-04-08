@@ -7,6 +7,7 @@ import { User } from "@supabase/supabase-js";
 
 interface Result {
   id: number;
+  video_id: string;
   title: string;
   channel_name: string;
   view_count: number;
@@ -280,8 +281,23 @@ export default function DashboardPage() {
                   key={result.id}
                   className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-4 mb-4">
-                    <div className="flex-1">
+                <div className="flex items-start gap-4 mb-4">
+                  {result.video_id && (
+                    <a
+                      href={result.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0"
+                    >
+                      <img
+                        src={`https://img.youtube.com/vi/${result.video_id}/mqdefault.jpg`}
+                        alt={result.title}
+                        className="w-40 h-[90px] object-cover rounded-lg"
+                      />
+                    </a>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
                       <a
                         href={result.link}
                         target="_blank"
@@ -290,16 +306,17 @@ export default function DashboardPage() {
                       >
                         {result.title}
                       </a>
-                      <p className="text-gray-400 text-sm mt-1">{result.channel_name}</p>
+                      <span
+                        className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium ${getSentimentColor(
+                          result.sentiment
+                        )}`}
+                      >
+                        {result.sentiment?.toUpperCase() || "NEUTRAL"}
+                      </span>
                     </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getSentimentColor(
-                        result.sentiment
-                      )}`}
-                    >
-                      {result.sentiment?.toUpperCase() || "NEUTRAL"}
-                    </span>
+                    <p className="text-gray-400 text-sm mt-1">{result.channel_name}</p>
                   </div>
+                </div>
 
                   <div className="flex gap-6 mb-4">
                     <div>
