@@ -24,6 +24,10 @@ interface TrackedData {
   video_count: number;
   sub_growth_pct: number;
   view_growth_pct: number;
+  sub_growth_raw: number;
+  view_growth_raw: number;
+  prev_subscriber_count: number;
+  prev_view_count: number;
 }
 
 interface EnrichedChannel extends DiscoveredChannel {
@@ -32,12 +36,15 @@ interface EnrichedChannel extends DiscoveredChannel {
 
 type SortKey = "subscriber_count" | "sub_growth" | "view_growth";
 
+const PAGE_SIZE = 25;
+
 export default function DiscoverPage() {
   const [channels, setChannels] = useState<EnrichedChannel[]>([]);
   const [trackedIds, setTrackedIds] = useState<Set<string>>(new Set());
   const [ignoredIds, setIgnoredIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<SortKey>("sub_growth");
+  const [page, setPage] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [showIgnored, setShowIgnored] = useState(false);
@@ -51,9 +58,9 @@ export default function DiscoverPage() {
     setUserId(user.id);
 
     const [channelsRes, trackedRes, trackedDataRes] = await Promise.all([
-      supabase.from("discovered_channels").select("*").order("discovered_at", { ascending: false }).limit(200),
+      supabase.from("discovered_channels").select("*").order("discovered_at", { ascending: false }).limit(500),
       supabase.from("user_channels").select("channel_id").eq("user_id", user.id),
-      supabase.from("tracked_discovery_channels").select("channel_id, description, thumbnail, country, subscriber_count, view_count, video_count, sub_growth_pct, view_growth_pct").limit(500),
+      supabase.from("tracked_discovery_channels").select("channel_id, description, thumbnail, country, subscriber_count, view_count, video_count, sub_growth_pct, view_growth_pct, sub_growth_raw, view_growth_raw, prev_subscriber_count, prev_view_count").limit(500),
     ]);
 
     const map = new Map<string, TrackedData>();
@@ -112,7 +119,12 @@ export default function DiscoverPage() {
       }
     });
 
+  const totalPages = Math.ceil(visible.length / PAGE_SIZE);
+  const paged = visible.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const ignored = channels.filter((c) => ignoredIds.has(c.channel_id));
+
+  // Reset page when sort changes
+  useEffect(() => { setPage(0); }, [sortBy]);
 
   const fmtNum = (n: number) => {
     if (!n) return "—";
@@ -122,6 +134,44 @@ export default function DiscoverPage() {
   };
   const fmtGrowth = (p: number) => { if (!p && p !== 0) return "—"; return (p > 0 ? "+" : "") + p.toFixed(1) + "%"; };
   const growthColor = (p: number) => p > 10 ? "var(--green)" : p > 0 ? "#6ee7b7" : p < 0 ? "var(--red)" : "var(--text-tertiary)";
+
+  const timeAgo = (dateStr: string) => {
+    if (!dateStr) return "";
+    const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000);
+    if (days === 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 7) return days + "d ago";
+    if (days < 30) return Math.floor(days / 7) + "w ago";
+    return Math.floor(days / 30) + "mo ago";
+  };
+
+  const channelUrl = (id: string, name: string) => {
+    // If channel_id looks like a UC... ID, link directly. Otherwise try handle.
+    if (id.startsWith("UC")) return `https://www.youtube.com/channel/${id}`;
+    return `https://www.youtube.com/@${name.replace(/\s+/g, "")}`;
+  };
+
+  function PaginationControls() {
+    if (totalPages <= 1) return null;
+    return (
+      <div className="flex items-center justify-center gap-1 py-4">
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i}
+            onClick={() => { setPage(i); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+            className="min-w-[36px] px-2 py-1.5 rounded text-[12px] font-medium font-mono"
+            style={{
+              color: page === i ? "var(--gold)" : "var(--text-muted)",
+              background: page === i ? "var(--gold-bg)" : "transparent",
+              border: page === i ? "1px solid var(--gold-border)" : "1px solid transparent",
+            }}
+          >
+            {i * PAGE_SIZE + 1}–{Math.min((i + 1) * PAGE_SIZE, visible.length)}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -145,7 +195,7 @@ export default function DiscoverPage() {
           </p>
         </div>
 
-        {/* Sort */}
+        {/* Sort + count */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] mr-1" style={{ color: "var(--text-muted)" }}>Sort:</span>
@@ -172,6 +222,9 @@ export default function DiscoverPage() {
           </span>
         </div>
 
+        {/* Pagination top */}
+        <PaginationControls />
+
         {visible.length === 0 ? (
           <div className="rounded-lg p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
             <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
@@ -181,76 +234,128 @@ export default function DiscoverPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {visible.map((ch) => {
+          <div className="space-y-3">
+            {paged.map((ch) => {
               const t = ch.tracked;
+              const subs = t?.subscriber_count || ch.subscriber_count;
+              const views = t?.view_count || 0;
+              const vids = t?.video_count || ch.video_count;
+              const url = channelUrl(ch.channel_id, ch.channel_name);
+
               return (
                 <div
                   key={ch.id}
-                  className="rounded-lg px-5 py-4"
+                  className="rounded-lg overflow-hidden"
                   style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
                 >
-                  <div className="flex items-center gap-4">
-                    {t?.thumbnail ? (
-                      <img src={t.thumbnail} alt="" className="w-10 h-10 rounded-full object-cover shrink-0" />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full shrink-0" style={{ background: "var(--bg-elevated)" }} />
-                    )}
-
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-sm font-medium truncate">{ch.channel_name}</h3>
-                      {t?.description && (
-                        <p className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "var(--text-muted)" }}>
-                          {t.description}
-                        </p>
+                  {/* Clickable card body */}
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-5 py-5 hover:bg-[var(--bg-hover)] transition-colors cursor-pointer"
+                  >
+                    <div className="flex items-start gap-4">
+                      {t?.thumbnail ? (
+                        <img src={t.thumbnail} alt="" className="w-14 h-14 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full shrink-0" style={{ background: "var(--bg-elevated)" }} />
                       )}
-                    </div>
 
-                    <div className="flex items-center gap-5 shrink-0">
-                      <div className="text-right">
-                        <div className="text-xs font-semibold font-mono">{fmtNum(t?.subscriber_count || ch.subscriber_count)}</div>
-                        <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>Subs</div>
-                      </div>
-                      {t?.sub_growth_pct != null && (
-                        <div className="text-right">
-                          <div className="text-xs font-semibold font-mono" style={{ color: growthColor(t.sub_growth_pct) }}>
-                            {fmtGrowth(t.sub_growth_pct)}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <h3 className="text-[15px] font-semibold truncate">{ch.channel_name}</h3>
+                            {t?.description && (
+                              <p className="text-xs line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                                {t.description}
+                              </p>
+                            )}
                           </div>
-                          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>Sub ↑</div>
+                          {t?.country && (
+                            <span className="text-[10px] font-mono shrink-0 px-1.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
+                              {t.country}
+                            </span>
+                          )}
                         </div>
-                      )}
-                      {t?.view_growth_pct != null && (
-                        <div className="text-right">
-                          <div className="text-xs font-semibold font-mono" style={{ color: growthColor(t.view_growth_pct) }}>
-                            {fmtGrowth(t.view_growth_pct)}
-                          </div>
-                          <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>View ↑</div>
-                        </div>
-                      )}
-                      <div className="text-right">
-                        <div className="text-xs font-semibold font-mono">{fmtNum(t?.video_count || ch.video_count)}</div>
-                        <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>Vids</div>
-                      </div>
 
-                      <div className="flex items-center gap-1.5 ml-2">
-                        <button
-                          onClick={() => trackChannel(ch)}
-                          disabled={actionLoading === ch.channel_id}
-                          className="px-3 py-1.5 rounded text-[11px] font-medium disabled:opacity-50"
-                          style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
-                        >
-                          {actionLoading === ch.channel_id ? "..." : "+ Track"}
-                        </button>
-                        <button
-                          onClick={() => ignoreChannel(ch.channel_id)}
-                          disabled={actionLoading === ch.channel_id}
-                          className="px-2 py-1.5 rounded text-[11px] disabled:opacity-50"
-                          style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
-                        >
-                          ✕
-                        </button>
+                        {/* Stats row */}
+                        <div className="flex items-center gap-5 mt-3">
+                          <div>
+                            <span className="text-sm font-semibold font-mono">{fmtNum(subs)}</span>
+                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold font-mono">{fmtNum(views)}</span>
+                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold font-mono">{fmtNum(vids)}</span>
+                            <span className="text-[10px] ml-1" style={{ color: "var(--text-muted)" }}>videos</span>
+                          </div>
+
+                          {t?.sub_growth_pct != null && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm font-semibold font-mono" style={{ color: growthColor(t.sub_growth_pct) }}>
+                                {fmtGrowth(t.sub_growth_pct)}
+                              </span>
+                              <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>sub ↑</span>
+                              {t.sub_growth_raw > 0 && (
+                                <span className="text-[10px] font-mono" style={{ color: "var(--text-muted)" }}>
+                                  (+{fmtNum(t.sub_growth_raw)})
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {t?.view_growth_pct != null && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm font-semibold font-mono" style={{ color: growthColor(t.view_growth_pct) }}>
+                                {fmtGrowth(t.view_growth_pct)}
+                              </span>
+                              <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>view ↑</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Meta row */}
+                        <div className="flex items-center gap-3 mt-2">
+                          {ch.discovered_from && (
+                            <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                              via {ch.discovered_from}
+                            </span>
+                          )}
+                          {ch.discovered_at && (
+                            <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                              {timeAgo(ch.discovered_at)}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
+                  </a>
+
+                  {/* Action bar */}
+                  <div
+                    className="flex items-center justify-end gap-2 px-5 py-2.5"
+                    style={{ borderTop: "1px solid var(--border-subtle)" }}
+                  >
+                    <button
+                      onClick={(e) => { e.preventDefault(); trackChannel(ch); }}
+                      disabled={actionLoading === ch.channel_id}
+                      className="px-4 py-1.5 rounded text-[11px] font-medium disabled:opacity-50"
+                      style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
+                    >
+                      {actionLoading === ch.channel_id ? "..." : "+ Track"}
+                    </button>
+                    <button
+                      onClick={(e) => { e.preventDefault(); ignoreChannel(ch.channel_id); }}
+                      disabled={actionLoading === ch.channel_id}
+                      className="px-3 py-1.5 rounded text-[11px] disabled:opacity-50"
+                      style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
+                    >
+                      Ignore
+                    </button>
                   </div>
                 </div>
               );
@@ -258,6 +363,10 @@ export default function DiscoverPage() {
           </div>
         )}
 
+        {/* Pagination bottom */}
+        <PaginationControls />
+
+        {/* Ignored */}
         {ignored.length > 0 && (
           <div className="mt-8">
             <button
