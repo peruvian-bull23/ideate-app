@@ -34,6 +34,21 @@ interface TrendingVideo {
 
 interface Profile {
   youtube_channel_name: string | null;
+  my_channel_name: string | null;
+  my_channel_thumbnail: string | null;
+  my_channel_subs: number | null;
+  my_channel_views: number | null;
+}
+
+interface MyVideo {
+  id: string;
+  video_id: string;
+  title: string;
+  thumbnail: string;
+  view_count: number;
+  like_count: number;
+  comment_count: number;
+  published_at: string;
 }
 
 export default function DashboardPage() {
@@ -41,6 +56,7 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [results, setResults] = useState<Result[]>([]);
   const [trending, setTrending] = useState<TrendingVideo[]>([]);
+  const [myVideos, setMyVideos] = useState<MyVideo[]>([]);
   const [channelCount, setChannelCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -59,10 +75,10 @@ export default function DashboardPage() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const [profileRes, resultsRes, trendingRes, channelCountRes] = await Promise.all([
+      const [profileRes, resultsRes, trendingRes, channelCountRes, myVideosRes] = await Promise.all([
         supabase
           .from("profiles")
-          .select("youtube_channel_name")
+          .select("youtube_channel_name, my_channel_name, my_channel_thumbnail, my_channel_subs, my_channel_views")
           .eq("id", user.id)
           .single(),
         supabase
@@ -82,11 +98,18 @@ export default function DashboardPage() {
           .from("user_channels")
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id),
+        supabase
+          .from("my_recent_videos")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("published_at", { ascending: false })
+          .limit(4),
       ]);
 
       setProfile(profileRes.data);
       setResults(resultsRes.data || []);
       setTrending(trendingRes.data || []);
+      setMyVideos(myVideosRes.data || []);
       setChannelCount(channelCountRes.count || 0);
       setLoading(false);
     }
@@ -164,6 +187,71 @@ export default function DashboardPage() {
             <div className="text-gray-400 text-sm">Trending Today</div>
           </div>
         </div>
+
+        {/* My Channel */}
+        {profile?.my_channel_name && (
+          <section className="mb-12">
+            <h2 className="text-xl font-bold mb-4">Your Channel</h2>
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
+              <div className="flex items-center gap-4 mb-6">
+                {profile.my_channel_thumbnail ? (
+                  <img
+                    src={profile.my_channel_thumbnail}
+                    alt={profile.my_channel_name}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center text-2xl">
+                    📺
+                  </div>
+                )}
+                <div>
+                  <h3 className="text-lg font-semibold">{profile.my_channel_name}</h3>
+                  <div className="flex items-center gap-4 mt-1">
+                    <span className="text-gray-400 text-sm">
+                      {formatViews(profile.my_channel_subs || 0)} subscribers
+                    </span>
+                    <span className="text-gray-600">·</span>
+                    <span className="text-gray-400 text-sm">
+                      {formatViews(profile.my_channel_views || 0)} total views
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {myVideos.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-medium text-gray-500 uppercase mb-3">Recent Videos</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {myVideos.map((video) => (
+                      <a
+                        key={video.id}
+                        href={`https://www.youtube.com/watch?v=${video.video_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group"
+                      >
+                        {video.thumbnail && (
+                          <img
+                            src={video.thumbnail}
+                            alt={video.title}
+                            className="w-full aspect-video object-cover rounded-lg mb-2 group-hover:opacity-80 transition-opacity"
+                          />
+                        )}
+                        <p className="text-sm font-medium line-clamp-2 group-hover:text-indigo-400 transition-colors">
+                          {video.title}
+                        </p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          {formatViews(video.view_count)} views
+                        </p>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* Today's Outliers */}
         <section className="mb-12">
