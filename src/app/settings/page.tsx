@@ -102,7 +102,7 @@ export default function SettingsPage() {
         <form onSubmit={saveSettings} className="space-y-6">
           {/* Account */}
           <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+            <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Account
             </h2>
             <div className="space-y-4">
@@ -140,7 +140,7 @@ export default function SettingsPage() {
 
           {/* Email */}
           <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+            <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Email Schedule
             </h2>
             <select
@@ -158,7 +158,7 @@ export default function SettingsPage() {
 
           {/* Scan */}
           <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+            <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Scan Settings
             </h2>
             <div>
@@ -179,7 +179,7 @@ export default function SettingsPage() {
 
           {/* Discovery */}
           <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
-            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+            <h2 className="text-base font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Discovery
             </h2>
             <div className="space-y-4">

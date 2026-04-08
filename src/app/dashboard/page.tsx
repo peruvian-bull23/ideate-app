@@ -161,7 +161,7 @@ export default function DashboardPage() {
         {/* My Channel */}
         {profile?.my_channel_name && (
           <section className="mb-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+            <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>
               Your Channel
             </h2>
             <div
@@ -221,7 +221,7 @@ export default function DashboardPage() {
 
         {/* Outliers */}
         <section className="mb-10">
-          <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+          <h2 className="text-lg font-bold mb-4" style={{ color: "var(--text-primary)" }}>
             Today&apos;s Outliers
           </h2>
 
@@ -313,7 +313,7 @@ export default function DashboardPage() {
         {/* Trending */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+            <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
               Trending in Your Niche
             </h2>
             {trending.length > 0 && (

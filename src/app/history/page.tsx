@@ -134,7 +134,7 @@ export default function HistoryPage() {
                 <div key={date}>
                   {/* Date header */}
                   <div className="flex items-center gap-3 mb-4">
-                    <h2 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+                    <h2 className="text-lg font-bold" style={{ color: "var(--text-primary)" }}>
                       {formatDate(date)}
                     </h2>
                     {day.outliers.length > 0 && (
