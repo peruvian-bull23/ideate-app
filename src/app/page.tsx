@@ -21,8 +21,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
-      <div className="text-gray-400">Loading...</div>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-primary)" }}>
+      <div className="text-sm" style={{ color: "var(--text-muted)" }}>Loading...</div>
     </div>
   );
 }

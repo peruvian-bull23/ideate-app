@@ -16,105 +16,80 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
-      setSuccess(true);
-      setLoading(false);
-    }
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) { setError(error.message); setLoading(false); }
+    else { setSuccess(true); setLoading(false); }
   };
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
-        <div className="w-full max-w-md text-center">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
-            <div className="text-5xl mb-4">✉️</div>
-            <h2 className="text-2xl font-bold mb-2">Check Your Email</h2>
-            <p className="text-gray-400 mb-6">
-              We sent a confirmation link to <strong>{email}</strong>
-            </p>
-            <Link
-              href="/login"
-              className="text-indigo-400 hover:underline"
-            >
-              Back to Sign In
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const inputStyle = {
+    background: "var(--bg-elevated)",
+    border: "1px solid var(--border-default)",
+    color: "var(--text-primary)",
+    outline: "none",
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg-primary)" }}>
+      <div className="w-full max-w-sm px-6">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-indigo-400 mb-2">💡 Ideate</h1>
-          <p className="text-gray-400">Viral Content Ideas</p>
+          <div className="flex items-center justify-center gap-2.5 mb-3">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--gold)" }}>
+              <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+            </svg>
+            <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--gold)" }}>Ideate</h1>
+          </div>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>YouTube Outlier Scanner</p>
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
-          <h2 className="text-2xl font-bold mb-6">Create Account</h2>
+        <div className="rounded-lg p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
+          <h2 className="text-lg font-semibold mb-5">Create Account</h2>
 
-          {error && (
-            <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded-lg mb-4">
-              {error}
+          {success ? (
+            <div className="text-center py-4">
+              <p className="text-sm mb-2" style={{ color: "var(--green)" }}>Check your email to confirm your account.</p>
+              <Link href="/login" className="text-xs hover:underline" style={{ color: "var(--gold)" }}>Back to Sign In</Link>
             </div>
+          ) : (
+            <>
+              {error && (
+                <div className="text-xs px-3 py-2.5 rounded-md mb-4" style={{ color: "var(--red)", background: "var(--red-bg)", border: "1px solid rgba(248,113,113,0.2)" }}>
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSignup} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Email</label>
+                  <input
+                    type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-md text-sm" style={inputStyle}
+                    placeholder="you@example.com" required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Password</label>
+                  <input
+                    type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-md text-sm" style={inputStyle}
+                    placeholder="••••••••" required minLength={6}
+                  />
+                  <p className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>Minimum 6 characters</p>
+                </div>
+                <button
+                  type="submit" disabled={loading}
+                  className="w-full py-2.5 rounded-md text-sm font-medium disabled:opacity-50"
+                  style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
+                >
+                  {loading ? "Creating account..." : "Create Account"}
+                </button>
+              </form>
+
+              <p className="mt-5 text-center text-xs" style={{ color: "var(--text-muted)" }}>
+                Already have an account?{" "}
+                <Link href="/login" style={{ color: "var(--gold)" }} className="hover:underline">Sign In</Link>
+              </p>
+            </>
           )}
-
-          <form onSubmit={handleSignup} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                placeholder="••••••••"
-                minLength={6}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-            >
-              {loading ? "Creating account..." : "Sign Up"}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-gray-400">
-            Already have an account?{" "}
-            <Link href="/login" className="text-indigo-400 hover:underline">
-              Sign In
-            </Link>
-          </p>
         </div>
       </div>
     </div>

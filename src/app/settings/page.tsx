@@ -31,18 +31,9 @@ export default function SettingsPage() {
   useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        window.location.href = "/login";
-        return;
-      }
+      if (!user) { window.location.href = "/login"; return; }
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
+      const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
       if (data) {
         setProfile({ ...data, email: user.email || "" });
         setChannelName(data.youtube_channel_name || "");
@@ -53,7 +44,6 @@ export default function SettingsPage() {
       }
       setLoading(false);
     }
-
     loadProfile();
   }, []);
 
@@ -65,196 +55,170 @@ export default function SettingsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const keywordsArray = keywords
-      .split(",")
-      .map((k) => k.trim())
-      .filter((k) => k.length > 0);
+    const keywordsArray = keywords.split(",").map((k) => k.trim()).filter((k) => k.length > 0);
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        youtube_channel_name: channelName || null,
-        email_schedule: emailSchedule,
-        outlier_threshold: outlierThreshold,
-        discovery_niche: discoveryNiche || null,
-        discovery_keywords: keywordsArray.length > 0 ? keywordsArray : null,
-      })
-      .eq("id", user.id);
+    const { error } = await supabase.from("profiles").update({
+      youtube_channel_name: channelName || null,
+      email_schedule: emailSchedule,
+      outlier_threshold: outlierThreshold,
+      discovery_niche: discoveryNiche || null,
+      discovery_keywords: keywordsArray.length > 0 ? keywordsArray : null,
+    }).eq("id", user.id);
 
-    if (error) {
-      setMessage("Failed to save settings");
-    } else {
-      setMessage("Settings saved successfully!");
-    }
+    setMessage(error ? "Failed to save settings" : "Saved");
     setSaving(false);
+    if (!error) setTimeout(() => setMessage(""), 2000);
   }
+
+  const inputStyle = {
+    background: "var(--bg-elevated)",
+    border: "1px solid var(--border-default)",
+    color: "var(--text-primary)",
+    outline: "none",
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-gray-400">Loading...</div>
+          <div className="text-sm" style={{ color: "var(--text-muted)" }}>Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
       <Navbar />
-      
-      <main className="max-w-3xl mx-auto px-4 py-8">
+      <main className="max-w-2xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Settings</h1>
-          <p className="text-gray-400">Manage your account and preferences</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+            Manage your account and preferences
+          </p>
         </div>
 
         <form onSubmit={saveSettings} className="space-y-6">
-          {/* Account Section */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-4">Account</h2>
-            
+          {/* Account */}
+          <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+              Account
+            </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Email
-                </label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Email</label>
                 <input
-                  type="email"
-                  value={profile?.email || ""}
-                  disabled
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 cursor-not-allowed"
+                  type="email" value={profile?.email || ""} disabled
+                  className="w-full px-3.5 py-2.5 rounded-md text-sm cursor-not-allowed"
+                  style={{ ...inputStyle, color: "var(--text-muted)" }}
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Your YouTube Channel Name
-                </label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Your YouTube Channel Name</label>
                 <input
-                  type="text"
-                  value={channelName}
-                  onChange={(e) => setChannelName(e.target.value)}
+                  type="text" value={channelName} onChange={(e) => setChannelName(e.target.value)}
                   placeholder="e.g., Peruvian Bull"
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                  className="w-full px-3.5 py-2.5 rounded-md text-sm"
+                  style={inputStyle}
                 />
-                <p className="text-gray-500 text-sm mt-1">Used to personalize your email digests</p>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Plan
-                </label>
-                <div className="flex items-center gap-3">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    profile?.plan === "pro" 
-                      ? "bg-indigo-600/20 text-indigo-400" 
-                      : "bg-gray-700 text-gray-300"
-                  }`}>
-                    {profile?.plan?.toUpperCase() || "FREE"}
-                  </span>
-                  {profile?.plan !== "pro" && (
-                    <a href="/pricing" className="text-indigo-400 text-sm hover:underline">
-                      Upgrade to Pro
-                    </a>
-                  )}
-                </div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Plan</label>
+                <span
+                  className="inline-block text-[11px] font-medium px-2.5 py-1 rounded"
+                  style={{
+                    color: profile?.plan === "pro" ? "var(--gold)" : "var(--text-tertiary)",
+                    background: profile?.plan === "pro" ? "var(--gold-bg)" : "var(--bg-elevated)",
+                  }}
+                >
+                  {profile?.plan?.toUpperCase() || "FREE"}
+                </span>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Email Settings */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-4">Email Settings</h2>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Email Schedule
-              </label>
-              <select
-                value={emailSchedule}
-                onChange={(e) => setEmailSchedule(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-              >
-                <option value="daily">Daily</option>
-                <option value="weekdays">Weekdays Only</option>
-                <option value="weekly_monday">Weekly on Monday</option>
-                <option value="weekly_sunday">Weekly on Sunday</option>
-                <option value="none">Paused</option>
-              </select>
-            </div>
-          </div>
+          {/* Email */}
+          <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+              Email Schedule
+            </h2>
+            <select
+              value={emailSchedule} onChange={(e) => setEmailSchedule(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-md text-sm"
+              style={inputStyle}
+            >
+              <option value="daily">Daily</option>
+              <option value="weekdays">Weekdays Only</option>
+              <option value="weekly_monday">Weekly on Monday</option>
+              <option value="weekly_sunday">Weekly on Sunday</option>
+              <option value="none">Paused</option>
+            </select>
+          </section>
 
-          {/* Scan Settings */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-4">Scan Settings</h2>
-            
+          {/* Scan */}
+          <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+              Scan Settings
+            </h2>
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Outlier Threshold: {outlierThreshold.toFixed(1)}x
+              <label className="block text-xs font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>
+                Outlier Threshold: <span className="font-mono" style={{ color: "var(--gold)" }}>{outlierThreshold.toFixed(1)}x</span>
               </label>
               <input
-                type="range"
-                min="1.5"
-                max="10"
-                step="0.5"
-                value={outlierThreshold}
-                onChange={(e) => setOutlierThreshold(parseFloat(e.target.value))}
+                type="range" min="1.5" max="10" step="0.5"
+                value={outlierThreshold} onChange={(e) => setOutlierThreshold(parseFloat(e.target.value))}
                 className="w-full"
               />
-              <div className="flex justify-between text-gray-500 text-xs mt-1">
-                <span>1.5x - More results</span>
-                <span>10x - Only top viral</span>
+              <div className="flex justify-between text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
+                <span>1.5x — More results</span>
+                <span>10x — Only top viral</span>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Discovery Settings */}
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <h2 className="text-lg font-semibold mb-4">Discovery Settings</h2>
-            
+          {/* Discovery */}
+          <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
+            <h2 className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+              Discovery
+            </h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Your Niche
-                </label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Your Niche</label>
                 <input
-                  type="text"
-                  value={discoveryNiche}
-                  onChange={(e) => setDiscoveryNiche(e.target.value)}
+                  type="text" value={discoveryNiche} onChange={(e) => setDiscoveryNiche(e.target.value)}
                   placeholder="e.g., finance and economics"
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                  className="w-full px-3.5 py-2.5 rounded-md text-sm"
+                  style={inputStyle}
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Discovery Keywords
-                </label>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>Discovery Keywords</label>
                 <textarea
-                  value={keywords}
-                  onChange={(e) => setKeywords(e.target.value)}
+                  value={keywords} onChange={(e) => setKeywords(e.target.value)}
                   placeholder="bitcoin, federal reserve, inflation, market crash"
                   rows={3}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-md text-sm resize-none"
+                  style={inputStyle}
                 />
-                <p className="text-gray-500 text-sm mt-1">Comma-separated keywords for trending video discovery</p>
+                <p className="text-[10px] mt-1" style={{ color: "var(--text-muted)" }}>
+                  Comma-separated keywords for trending video discovery
+                </p>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Save Button */}
-          <div className="flex items-center gap-4">
+          {/* Save */}
+          <div className="flex items-center gap-3">
             <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors disabled:opacity-50"
+              type="submit" disabled={saving}
+              className="px-5 py-2.5 rounded-md text-sm font-medium disabled:opacity-50"
+              style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
             >
               {saving ? "Saving..." : "Save Settings"}
             </button>
             {message && (
-              <span className={message.includes("Failed") ? "text-red-400" : "text-green-400"}>
+              <span className="text-xs font-medium" style={{ color: message === "Saved" ? "var(--green)" : "var(--red)" }}>
                 {message}
               </span>
             )}

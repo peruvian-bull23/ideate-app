@@ -6,6 +6,41 @@ import { createClient } from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
 
+const icons = {
+  dashboard: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  ),
+  channels: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8Z" />
+      <path d="m10 9 5 3-5 3V9Z" />
+    </svg>
+  ),
+  discover: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="m14.5 9.5-5 2 2 5 5-2-2-5Z" />
+    </svg>
+  ),
+  history: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 3" />
+    </svg>
+  ),
+  settings: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+};
+
 export default function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
@@ -23,44 +58,88 @@ export default function Navbar() {
   };
 
   const links = [
-    { href: "/dashboard", label: "Dashboard", icon: "📊" },
-    { href: "/channels", label: "Channels", icon: "📺" },
-    { href: "/discover", label: "Discover", icon: "🔍" },
-    { href: "/history", label: "History", icon: "📜" },
-    { href: "/settings", label: "Settings", icon: "⚙️" },
+    { href: "/dashboard", label: "Dashboard", icon: icons.dashboard },
+    { href: "/channels", label: "Channels", icon: icons.channels },
+    { href: "/discover", label: "Discover", icon: icons.discover },
+    { href: "/history", label: "History", icon: icons.history },
+    { href: "/settings", label: "Settings", icon: icons.settings },
   ];
 
   return (
-    <nav className="bg-gray-900 border-b border-gray-800">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+    <nav
+      style={{ background: "var(--bg-secondary)", borderBottom: "1px solid var(--border-subtle)" }}
+    >
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex items-center justify-between h-14">
           <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="text-xl font-bold text-indigo-400">
-              💡 Ideate
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2.5"
+              style={{ color: "var(--gold)" }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+              </svg>
+              <span className="text-[15px] font-semibold tracking-tight">Ideate</span>
             </Link>
-            <div className="flex gap-1">
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    pathname === link.href
-                      ? "bg-indigo-600 text-white"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800"
-                  }`}
-                >
-                  {link.icon} {link.label}
-                </Link>
-              ))}
+
+            <div className="flex items-center gap-0.5">
+              {links.map((link) => {
+                const isActive = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[13px] font-medium"
+                    style={{
+                      color: isActive ? "var(--gold)" : "var(--text-tertiary)",
+                      background: isActive ? "var(--gold-bg)" : "transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.color = "var(--text-secondary)";
+                        e.currentTarget.style.background = "var(--bg-hover)";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        e.currentTarget.style.color = "var(--text-tertiary)";
+                        e.currentTarget.style.background = "transparent";
+                      }
+                    }}
+                  >
+                    {link.icon}
+                    {link.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
+
           <div className="flex items-center gap-4">
             {user && (
               <>
-                <span className="text-sm text-gray-400">{user.email}</span>
+                <span
+                  className="text-[12px]"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {user.email}
+                </span>
                 <button
                   onClick={handleSignOut}
-                  className="text-sm text-gray-400 hover:text-white"
+                  className="text-[12px] px-3 py-1 rounded-md"
+                  style={{
+                    color: "var(--text-tertiary)",
+                    border: "1px solid var(--border-subtle)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-hover)";
+                    e.currentTarget.style.color = "var(--text-secondary)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--border-subtle)";
+                    e.currentTarget.style.color = "var(--text-tertiary)";
+                  }}
                 >
                   Sign Out
                 </button>

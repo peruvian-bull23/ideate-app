@@ -65,46 +65,18 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadData() {
       const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        window.location.href = "/login";
-        return;
-      }
-
+      if (!user) { window.location.href = "/login"; return; }
       setUser(user);
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       const [profileRes, resultsRes, trendingRes, channelCountRes, myVideosRes] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("youtube_channel_name, my_channel_name, my_channel_thumbnail, my_channel_subs, my_channel_views")
-          .eq("id", user.id)
-          .single(),
-        supabase
-          .from("results")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("created_at", today.toISOString())
-          .order("outlier_score", { ascending: false }),
-        supabase
-          .from("discovery_trending_videos")
-          .select("*")
-          .eq("user_id", user.id)
-          .gte("discovered_at", today.toISOString())
-          .order("views_per_hour", { ascending: false })
-          .limit(20),
-        supabase
-          .from("user_channels")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id),
-        supabase
-          .from("my_recent_videos")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("published_at", { ascending: false })
-          .limit(4),
+        supabase.from("profiles").select("youtube_channel_name, my_channel_name, my_channel_thumbnail, my_channel_subs, my_channel_views").eq("id", user.id).single(),
+        supabase.from("results").select("*").eq("user_id", user.id).gte("created_at", today.toISOString()).order("outlier_score", { ascending: false }),
+        supabase.from("discovery_trending_videos").select("*").eq("user_id", user.id).gte("discovered_at", today.toISOString()).order("views_per_hour", { ascending: false }).limit(20),
+        supabase.from("user_channels").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("my_recent_videos").select("*").eq("user_id", user.id).order("published_at", { ascending: false }).limit(4),
       ]);
 
       setProfile(profileRes.data);
@@ -114,333 +86,299 @@ export default function DashboardPage() {
       setChannelCount(channelCountRes.count || 0);
       setLoading(false);
     }
-
     loadData();
   }, []);
 
-  const formatViews = (views: number) => {
-    if (views >= 1000000) return (views / 1000000).toFixed(1) + "M";
-    if (views >= 1000) return (views / 1000).toFixed(0) + "K";
-    return views.toString();
+  const fmtNum = (n: number) => {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+    if (n >= 1000) return (n / 1000).toFixed(0) + "K";
+    return n.toString();
   };
 
-  const formatViewsPerHour = (vph: number) => {
-    if (!vph) return "-";
-    if (vph >= 1000) return (vph / 1000).toFixed(1) + "K/hr";
-    return vph.toFixed(0) + "/hr";
+  const fmtVPH = (v: number) => {
+    if (!v) return "—";
+    if (v >= 1000) return (v / 1000).toFixed(1) + "K/hr";
+    return v.toFixed(0) + "/hr";
   };
 
-  const getSentimentColor = (sentiment: string) => {
-    switch (sentiment?.toLowerCase()) {
-      case "bullish": return "text-green-400 bg-green-400/10";
-      case "bearish": return "text-red-400 bg-red-400/10";
-      default: return "text-gray-400 bg-gray-400/10";
+  const sentimentStyle = (s: string) => {
+    switch (s?.toLowerCase()) {
+      case "bullish": return { color: "var(--green)", background: "var(--green-bg)" };
+      case "bearish": return { color: "var(--red)", background: "var(--red-bg)" };
+      default: return { color: "var(--text-tertiary)", background: "var(--bg-elevated)" };
     }
-  };
-
-  const getRelevanceColor = (score: number) => {
-    if (score >= 8) return "text-green-400 bg-green-400/10";
-    if (score >= 5) return "text-yellow-400 bg-yellow-400/10";
-    return "text-gray-400 bg-gray-400/10";
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-gray-400">Loading...</div>
+          <div style={{ color: "var(--text-muted)" }} className="text-sm">Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-6 py-8">
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back{profile?.youtube_channel_name ? `, ${profile.youtube_channel_name}` : ""}!
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Welcome back{profile?.youtube_channel_name ? `, ${profile.youtube_channel_name}` : ""}
           </h1>
-          <p className="text-gray-400">Here are your latest outlier videos</p>
+          <p style={{ color: "var(--text-tertiary)" }} className="text-sm mt-1">
+            Your daily briefing
+          </p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <div className="text-3xl font-bold text-indigo-400">{results.length}</div>
-            <div className="text-gray-400 text-sm">Outliers Today</div>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <div className="text-3xl font-bold text-purple-400">{channelCount}</div>
-            <div className="text-gray-400 text-sm">Channels Tracked</div>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <div className="text-3xl font-bold text-cyan-400">
-              {results.length > 0 ? results[0].outlier_score.toFixed(1) + "x" : "-"}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+          {[
+            { label: "Outliers Today", value: results.length, color: "var(--gold)" },
+            { label: "Channels Tracked", value: channelCount, color: "var(--text-secondary)" },
+            { label: "Top Score", value: results.length > 0 ? results[0].outlier_score.toFixed(1) + "x" : "—", color: "var(--gold-light)" },
+            { label: "Trending Today", value: trending.length, color: "var(--text-secondary)" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-lg px-5 py-4"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+            >
+              <div className="text-2xl font-semibold font-mono" style={{ color: stat.color }}>
+                {stat.value}
+              </div>
+              <div className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                {stat.label}
+              </div>
             </div>
-            <div className="text-gray-400 text-sm">Top Outlier Score</div>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-            <div className="text-3xl font-bold text-orange-400">{trending.length}</div>
-            <div className="text-gray-400 text-sm">Trending Today</div>
-          </div>
+          ))}
         </div>
 
         {/* My Channel */}
         {profile?.my_channel_name && (
-          <section className="mb-12">
-            <h2 className="text-xl font-bold mb-4">Your Channel</h2>
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
-              <div className="flex items-center gap-4 mb-6">
+          <section className="mb-10">
+            <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+              Your Channel
+            </h2>
+            <div
+              className="rounded-lg p-5"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+            >
+              <div className="flex items-center gap-4 mb-5">
                 {profile.my_channel_thumbnail ? (
-                  <img
-                    src={profile.my_channel_thumbnail}
-                    alt={profile.my_channel_name}
-                    className="w-16 h-16 rounded-full object-cover"
-                  />
+                  <img src={profile.my_channel_thumbnail} alt="" className="w-12 h-12 rounded-full object-cover" />
                 ) : (
-                  <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center text-2xl">
-                    📺
-                  </div>
+                  <div className="w-12 h-12 rounded-full" style={{ background: "var(--bg-elevated)" }} />
                 )}
                 <div>
-                  <h3 className="text-lg font-semibold">{profile.my_channel_name}</h3>
-                  <div className="flex items-center gap-4 mt-1">
-                    <span className="text-gray-400 text-sm">
-                      {formatViews(profile.my_channel_subs || 0)} subscribers
+                  <h3 className="font-semibold text-[15px]">{profile.my_channel_name}</h3>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                      {fmtNum(profile.my_channel_subs || 0)} subscribers
                     </span>
-                    <span className="text-gray-600">·</span>
-                    <span className="text-gray-400 text-sm">
-                      {formatViews(profile.my_channel_views || 0)} total views
+                    <span style={{ color: "var(--text-muted)" }}>·</span>
+                    <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+                      {fmtNum(profile.my_channel_views || 0)} views
                     </span>
                   </div>
                 </div>
               </div>
 
               {myVideos.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-medium text-gray-500 uppercase mb-3">Recent Videos</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {myVideos.map((video) => (
-                      <a
-                        key={video.id}
-                        href={`https://www.youtube.com/watch?v=${video.video_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group"
-                      >
-                        {video.thumbnail && (
-                          <img
-                            src={video.thumbnail}
-                            alt={video.title}
-                            className="w-full aspect-video object-cover rounded-lg mb-2 group-hover:opacity-80 transition-opacity"
-                          />
-                        )}
-                        <p className="text-sm font-medium line-clamp-2 group-hover:text-indigo-400 transition-colors">
-                          {video.title}
-                        </p>
-                        <p className="text-gray-500 text-xs mt-1">
-                          {formatViews(video.view_count)} views
-                        </p>
-                      </a>
-                    ))}
-                  </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {myVideos.map((v) => (
+                    <a
+                      key={v.id}
+                      href={`https://www.youtube.com/watch?v=${v.video_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group"
+                    >
+                      {v.thumbnail && (
+                        <img
+                          src={v.thumbnail}
+                          alt=""
+                          className="w-full aspect-video object-cover rounded-md mb-2 group-hover:opacity-80 transition-opacity"
+                        />
+                      )}
+                      <p className="text-xs font-medium line-clamp-2 leading-snug group-hover:text-[var(--gold)] transition-colors">
+                        {v.title}
+                      </p>
+                      <p className="text-[11px] mt-1 font-mono" style={{ color: "var(--text-muted)" }}>
+                        {fmtNum(v.view_count)} views
+                      </p>
+                    </a>
+                  ))}
                 </div>
               )}
             </div>
           </section>
         )}
 
-        {/* Today's Outliers */}
-        <section className="mb-12">
-          <h2 className="text-xl font-bold mb-4">Today&apos;s Outliers</h2>
+        {/* Outliers */}
+        <section className="mb-10">
+          <h2 className="text-sm font-semibold uppercase tracking-wider mb-4" style={{ color: "var(--text-muted)" }}>
+            Today&apos;s Outliers
+          </h2>
 
           {results.length === 0 ? (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
-              <div className="text-5xl mb-4">🔍</div>
-              <h3 className="text-lg font-bold mb-2">No Outliers Today</h3>
-              <p className="text-gray-400 mb-4">
-                Your daily scan hasn&apos;t found any outlier videos yet. Check back later!
+            <div
+              className="rounded-lg p-10 text-center"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+            >
+              <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+                No outliers found today.
+                {channelCount === 0 && (
+                  <> <a href="/channels" style={{ color: "var(--gold)" }} className="hover:underline">Add channels</a> to start scanning.</>
+                )}
               </p>
-              {channelCount === 0 && (
-                <a
-                  href="/channels"
-                  className="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors"
-                >
-                  Add Channels to Track
-                </a>
-              )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {results.map((result) => (
+            <div className="space-y-3">
+              {results.map((r) => (
                 <div
-                  key={result.id}
-                  className="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-colors"
+                  key={r.id}
+                  className="rounded-lg p-5"
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
                 >
-                <div className="flex items-start gap-4 mb-4">
-                  {result.video_id && (
-                    <a
-                      href={result.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0"
-                    >
-                      <img
-                        src={`https://img.youtube.com/vi/${result.video_id}/mqdefault.jpg`}
-                        alt={result.title}
-                        className="w-40 h-[90px] object-cover rounded-lg"
-                      />
-                    </a>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <a
-                        href={result.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-lg font-semibold hover:text-indigo-400 transition-colors"
-                      >
-                        {result.title}
+                  <div className="flex items-start gap-4">
+                    {r.video_id && (
+                      <a href={r.link} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                        <img
+                          src={`https://img.youtube.com/vi/${r.video_id}/mqdefault.jpg`}
+                          alt=""
+                          className="w-40 h-[90px] object-cover rounded-md"
+                        />
                       </a>
-                      <span
-                        className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium ${getSentimentColor(
-                          result.sentiment
-                        )}`}
-                      >
-                        {result.sentiment?.toUpperCase() || "NEUTRAL"}
-                      </span>
-                    </div>
-                    <p className="text-gray-400 text-sm mt-1">{result.channel_name}</p>
-                  </div>
-                </div>
-
-                  <div className="flex gap-6 mb-4">
-                    <div>
-                      <div className="text-xl font-bold">{formatViews(result.view_count)}</div>
-                      <div className="text-gray-500 text-xs">Views</div>
-                    </div>
-                    <div>
-                      <div className="text-xl font-bold text-indigo-400">
-                        {result.outlier_score.toFixed(1)}x
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <a
+                          href={r.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-[15px] leading-snug hover:text-[var(--gold)] transition-colors line-clamp-1"
+                        >
+                          {r.title}
+                        </a>
+                        <span
+                          className="shrink-0 px-2.5 py-0.5 rounded text-[11px] font-medium"
+                          style={sentimentStyle(r.sentiment)}
+                        >
+                          {r.sentiment?.toUpperCase() || "NEUTRAL"}
+                        </span>
                       </div>
-                      <div className="text-gray-500 text-xs">Outlier Score</div>
+                      <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>{r.channel_name}</p>
+
+                      <div className="flex items-center gap-5 mt-3">
+                        <div>
+                          <span className="text-sm font-semibold font-mono">{fmtNum(r.view_count)}</span>
+                          <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                        </div>
+                        <div>
+                          <span className="text-sm font-semibold font-mono" style={{ color: "var(--gold)" }}>
+                            {r.outlier_score.toFixed(1)}x
+                          </span>
+                          <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>score</span>
+                        </div>
+                      </div>
+
+                      {r.summary && (
+                        <p className="text-xs mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                          {r.summary}
+                        </p>
+                      )}
+
+                      {r.key_claims && r.key_claims.length > 0 && (
+                        <div className="mt-3 pt-3" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+                          {r.key_claims.slice(0, 3).map((c, i) => (
+                            <p key={i} className="text-[11px] leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                              → {c}
+                            </p>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
-
-                  <p className="text-gray-300 text-sm mb-4">{result.summary}</p>
-
-                  {result.key_claims && result.key_claims.length > 0 && (
-                    <div className="border-t border-gray-800 pt-4">
-                      <h4 className="text-xs font-medium text-gray-500 uppercase mb-2">
-                        Key Takeaways
-                      </h4>
-                      <ul className="text-sm text-gray-400 space-y-1">
-                        {result.key_claims.slice(0, 3).map((claim, i) => (
-                          <li key={i}>• {claim}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  <a
-                    href={result.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Watch Video
-                  </a>
                 </div>
               ))}
             </div>
           )}
         </section>
 
-        {/* Trending in Your Niche */}
+        {/* Trending */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">🔥 Trending in Your Niche</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+              Trending in Your Niche
+            </h2>
             {trending.length > 0 && (
-              <span className="text-gray-500 text-sm">{trending.length} videos today</span>
+              <span className="text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>
+                {trending.length} videos
+              </span>
             )}
           </div>
 
           {trending.length === 0 ? (
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-10 text-center">
-              <div className="text-4xl mb-3">🔥</div>
-              <h3 className="text-lg font-bold mb-2">No Trending Videos Today</h3>
-              <p className="text-gray-400 text-sm">
-                Set your discovery keywords in{" "}
-                <a href="/settings" className="text-indigo-400 hover:underline">
-                  Settings
-                </a>{" "}
-                to see what&apos;s hot in your niche.
+            <div
+              className="rounded-lg p-10 text-center"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+            >
+              <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+                No trending videos today. Set your{" "}
+                <a href="/settings" style={{ color: "var(--gold)" }} className="hover:underline">discovery keywords</a>
+                {" "}to get started.
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {trending.map((video) => (
+            <div className="space-y-2">
+              {trending.map((v) => (
                 <div
-                  key={video.id}
-                  className="bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-gray-700 transition-colors"
+                  key={v.id}
+                  className="rounded-lg px-4 py-3"
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
                 >
-                  <div className="flex items-center gap-4">
-                    {video.thumbnail && (
-                      <a
-                        href={video.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="shrink-0"
-                      >
-                        <img
-                          src={video.thumbnail}
-                          alt={video.title}
-                          className="w-32 h-[72px] object-cover rounded-lg"
-                        />
+                  <div className="flex items-center gap-3">
+                    {v.thumbnail && (
+                      <a href={v.link} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                        <img src={v.thumbnail} alt="" className="w-28 h-[63px] object-cover rounded-md" />
                       </a>
                     )}
                     <div className="flex-1 min-w-0">
                       <a
-                        href={video.link}
+                        href={v.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-semibold text-sm hover:text-indigo-400 transition-colors line-clamp-1"
+                        className="text-[13px] font-medium hover:text-[var(--gold)] transition-colors line-clamp-1"
                       >
-                        {video.title}
+                        {v.title}
                       </a>
-                      <p className="text-gray-500 text-xs mt-1">{video.channel_name}</p>
-                      {video.relevance_reason && (
-                        <p className="text-gray-400 text-xs mt-1 line-clamp-1">
-                          {video.relevance_reason}
-                        </p>
-                      )}
+                      <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>{v.channel_name}</p>
                     </div>
 
-                    <div className="flex items-center gap-5 shrink-0">
+                    <div className="flex items-center gap-4 shrink-0">
                       <div className="text-right">
-                        <div className="font-semibold text-sm">
-                          {formatViews(video.view_count)}
-                        </div>
-                        <div className="text-gray-500 text-xs">Views</div>
+                        <div className="text-xs font-semibold font-mono">{fmtNum(v.view_count)}</div>
+                        <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>views</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-sm text-cyan-400">
-                          {formatViewsPerHour(video.views_per_hour)}
-                        </div>
-                        <div className="text-gray-500 text-xs">Velocity</div>
+                        <div className="text-xs font-semibold font-mono" style={{ color: "var(--cyan)" }}>{fmtVPH(v.views_per_hour)}</div>
+                        <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>velocity</div>
                       </div>
-                      {video.relevance_score > 0 && (
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${getRelevanceColor(
-                            video.relevance_score
-                          )}`}
+                      {v.relevance_score > 0 && (
+                        <div
+                          className="text-[11px] font-mono font-medium px-2 py-0.5 rounded"
+                          style={{
+                            color: v.relevance_score >= 8 ? "var(--green)" : v.relevance_score >= 5 ? "var(--gold)" : "var(--text-tertiary)",
+                            background: v.relevance_score >= 8 ? "var(--green-bg)" : v.relevance_score >= 5 ? "var(--gold-bg)" : "var(--bg-elevated)",
+                          }}
                         >
-                          {video.relevance_score.toFixed(0)}/10
-                        </span>
+                          {v.relevance_score.toFixed(0)}/10
+                        </div>
                       )}
                     </div>
                   </div>

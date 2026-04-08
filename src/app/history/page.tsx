@@ -17,9 +17,7 @@ interface Result {
   created_at: string;
 }
 
-interface GroupedResults {
-  [date: string]: Result[];
-}
+interface GroupedResults { [date: string]: Result[]; }
 
 export default function HistoryPage() {
   const [results, setResults] = useState<Result[]>([]);
@@ -29,15 +27,10 @@ export default function HistoryPage() {
   useEffect(() => {
     async function loadHistory() {
       const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        window.location.href = "/login";
-        return;
-      }
+      if (!user) { window.location.href = "/login"; return; }
 
       const { data } = await supabase
-        .from("results")
-        .select("*")
+        .from("results").select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(200);
@@ -45,136 +38,126 @@ export default function HistoryPage() {
       setResults(data || []);
       setLoading(false);
     }
-
     loadHistory();
   }, []);
 
-  const formatViews = (views: number) => {
-    if (views >= 1000000) return (views / 1000000).toFixed(1) + "M";
-    if (views >= 1000) return (views / 1000).toFixed(0) + "K";
-    return views.toString();
+  const fmtNum = (n: number) => {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+    if (n >= 1000) return (n / 1000).toFixed(0) + "K";
+    return n.toString();
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+  const formatDate = (d: string) => new Date(d).toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric",
+  });
 
-  const groupByDate = (results: Result[]): GroupedResults => {
-    return results.reduce((groups: GroupedResults, result) => {
-      const date = new Date(result.created_at).toDateString();
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(result);
-      return groups;
+  const groupByDate = (r: Result[]): GroupedResults =>
+    r.reduce((g: GroupedResults, item) => {
+      const d = new Date(item.created_at).toDateString();
+      (g[d] = g[d] || []).push(item);
+      return g;
     }, {});
-  };
 
-  const getSentimentColor = (sentiment: string) => {
-    switch (sentiment?.toLowerCase()) {
-      case "bullish": return "text-green-400 bg-green-400/10";
-      case "bearish": return "text-red-400 bg-red-400/10";
-      default: return "text-gray-400 bg-gray-400/10";
+  const sentimentStyle = (s: string) => {
+    switch (s?.toLowerCase()) {
+      case "bullish": return { color: "var(--green)", background: "var(--green-bg)" };
+      case "bearish": return { color: "var(--red)", background: "var(--red-bg)" };
+      default: return { color: "var(--text-tertiary)", background: "var(--bg-elevated)" };
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950">
+      <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
         <Navbar />
         <div className="flex items-center justify-center h-96">
-          <div className="text-gray-400">Loading...</div>
+          <div className="text-sm" style={{ color: "var(--text-muted)" }}>Loading...</div>
         </div>
       </div>
     );
   }
 
-  const groupedResults = groupByDate(results);
-  const dates = Object.keys(groupedResults);
+  const grouped = groupByDate(results);
+  const dates = Object.keys(grouped);
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
       <Navbar />
-      
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">History</h1>
-          <p className="text-gray-400">Browse your past outlier video results</p>
+          <h1 className="text-2xl font-semibold tracking-tight">History</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--text-tertiary)" }}>
+            Browse past outlier results
+          </p>
         </div>
 
         {results.length === 0 ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-12 text-center">
-            <div className="text-5xl mb-4">📜</div>
-            <h2 className="text-xl font-bold mb-2">No History Yet</h2>
-            <p className="text-gray-400">
-              Your scan results will appear here after your first daily scan
+          <div className="rounded-lg p-12 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
+            <p className="text-sm" style={{ color: "var(--text-tertiary)" }}>
+              No history yet. Results will appear after your first scan.
             </p>
           </div>
         ) : (
           <div className="space-y-8">
             {dates.map((date) => (
               <div key={date}>
-                <div className="flex items-center gap-4 mb-4">
-                  <h2 className="text-lg font-semibold">{formatDate(date)}</h2>
-                  <span className="px-3 py-1 bg-indigo-600/20 text-indigo-400 rounded-full text-sm">
-                    {groupedResults[date].length} video{groupedResults[date].length !== 1 ? "s" : ""}
+                <div className="flex items-center gap-3 mb-3">
+                  <h2 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>
+                    {formatDate(date)}
+                  </h2>
+                  <span
+                    className="text-[11px] font-mono px-2 py-0.5 rounded"
+                    style={{ color: "var(--gold)", background: "var(--gold-bg)" }}
+                  >
+                    {grouped[date].length}
                   </span>
                 </div>
 
-                <div className="space-y-3">
-                  {groupedResults[date].map((result) => (
+                <div className="space-y-2">
+                  {grouped[date].map((r) => (
                     <div
-                      key={result.id}
-                      className="bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-colors"
+                      key={r.id}
+                      className="rounded-lg px-5 py-4"
+                      style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
                     >
                       <div className="flex items-start gap-4">
-                        {result.video_id && (
-                          <a
-                            href={result.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0"
-                          >
+                        {r.video_id && (
+                          <a href={r.link} target="_blank" rel="noopener noreferrer" className="shrink-0">
                             <img
-                              src={`https://img.youtube.com/vi/${result.video_id}/mqdefault.jpg`}
-                              alt={result.title}
-                              className="w-36 h-[81px] object-cover rounded-lg"
+                              src={`https://img.youtube.com/vi/${r.video_id}/mqdefault.jpg`}
+                              alt=""
+                              className="w-32 h-[72px] object-cover rounded-md"
                             />
                           </a>
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start justify-between gap-3">
                             <a
-                              href={result.link}
+                              href={r.link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="font-semibold hover:text-indigo-400 transition-colors"
+                              className="text-[13px] font-medium hover:text-[var(--gold)] transition-colors line-clamp-1"
                             >
-                              {result.title}
+                              {r.title}
                             </a>
-                            <div className="flex items-center gap-4 shrink-0">
-                              <div className="text-right">
-                                <div className="font-semibold">{formatViews(result.view_count)}</div>
-                                <div className="text-gray-500 text-xs">Views</div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-semibold text-indigo-400">{result.outlier_score.toFixed(1)}x</div>
-                                <div className="text-gray-500 text-xs">Score</div>
-                              </div>
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${getSentimentColor(result.sentiment)}`}>
-                                {result.sentiment?.toUpperCase() || "NEUTRAL"}
+                            <div className="flex items-center gap-3 shrink-0">
+                              <span className="text-xs font-mono font-semibold">{fmtNum(r.view_count)}</span>
+                              <span className="text-xs font-mono font-semibold" style={{ color: "var(--gold)" }}>
+                                {r.outlier_score.toFixed(1)}x
+                              </span>
+                              <span
+                                className="text-[10px] font-medium px-2 py-0.5 rounded"
+                                style={sentimentStyle(r.sentiment)}
+                              >
+                                {r.sentiment?.toUpperCase() || "NEUTRAL"}
                               </span>
                             </div>
                           </div>
-                          <p className="text-gray-500 text-sm mt-1">{result.channel_name}</p>
-                          {result.summary && (
-                            <p className="text-gray-400 text-sm mt-2 line-clamp-2">{result.summary}</p>
+                          <p className="text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>{r.channel_name}</p>
+                          {r.summary && (
+                            <p className="text-xs mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
+                              {r.summary}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -186,8 +169,8 @@ export default function HistoryPage() {
           </div>
         )}
 
-        <div className="mt-8 text-center text-gray-500 text-sm">
-          Showing {results.length} result{results.length !== 1 ? "s" : ""}
+        <div className="mt-8 text-center text-[11px] font-mono" style={{ color: "var(--text-muted)" }}>
+          {results.length} result{results.length !== 1 ? "s" : ""}
         </div>
       </main>
     </div>

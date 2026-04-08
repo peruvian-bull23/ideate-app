@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ideate - Viral Content Ideas",
-  description: "AI-powered YouTube scanner for viral video opportunities",
+  title: "Ideate — YouTube Outlier Scanner",
+  description: "Find viral video opportunities and growing channels in your niche",
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-gray-950 text-gray-100 min-h-screen">
+      <body className="noise-bg">
         {children}
       </body>
     </html>
