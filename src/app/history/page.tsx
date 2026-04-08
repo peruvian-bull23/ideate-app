@@ -134,7 +134,7 @@ export default function HistoryPage() {
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          
+                          <a
                             href={result.link}
                             target="_blank"
                             rel="noopener noreferrer"

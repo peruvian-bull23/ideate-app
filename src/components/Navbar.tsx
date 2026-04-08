@@ -25,6 +25,7 @@ export default function Navbar() {
   const links = [
     { href: "/dashboard", label: "Dashboard", icon: "📊" },
     { href: "/channels", label: "Channels", icon: "📺" },
+    { href: "/discover", label: "Discover", icon: "🔍" },
     { href: "/history", label: "History", icon: "📜" },
     { href: "/settings", label: "Settings", icon: "⚙️" },
   ];
