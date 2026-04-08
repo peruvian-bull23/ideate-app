@@ -335,50 +335,58 @@ export default function DashboardPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {trending.map((v) => (
                 <div
                   key={v.id}
-                  className="rounded-lg px-4 py-3"
+                  className="rounded-lg p-5"
                   style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start gap-4">
                     {v.thumbnail && (
                       <a href={v.link} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                        <img src={v.thumbnail} alt="" className="w-28 h-[63px] object-cover rounded-md" />
+                        <img src={v.thumbnail} alt="" className="w-40 h-[90px] object-cover rounded-md" />
                       </a>
                     )}
                     <div className="flex-1 min-w-0">
-                      <a
-                        href={v.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[13px] font-medium hover:text-[var(--gold)] transition-colors line-clamp-1"
-                      >
-                        {v.title}
-                      </a>
-                      <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>{v.channel_name}</p>
-                    </div>
-
-                    <div className="flex items-center gap-4 shrink-0">
-                      <div className="text-right">
-                        <div className="text-xs font-semibold font-mono">{fmtNum(v.view_count)}</div>
-                        <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>views</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs font-semibold font-mono" style={{ color: "var(--cyan)" }}>{fmtVPH(v.views_per_hour)}</div>
-                        <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>velocity</div>
-                      </div>
-                      {v.relevance_score > 0 && (
-                        <div
-                          className="text-[11px] font-mono font-medium px-2 py-0.5 rounded"
-                          style={{
-                            color: v.relevance_score >= 8 ? "var(--green)" : v.relevance_score >= 5 ? "var(--gold)" : "var(--text-tertiary)",
-                            background: v.relevance_score >= 8 ? "var(--green-bg)" : v.relevance_score >= 5 ? "var(--gold-bg)" : "var(--bg-elevated)",
-                          }}
+                      <div className="flex items-start justify-between gap-3">
+                        <a
+                          href={v.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-[15px] leading-snug hover:text-[var(--gold)] transition-colors line-clamp-1"
                         >
-                          {v.relevance_score.toFixed(0)}/10
+                          {v.title}
+                        </a>
+                        {v.relevance_score > 0 && (
+                          <div
+                            className="shrink-0 text-[11px] font-mono font-medium px-2 py-0.5 rounded"
+                            style={{
+                              color: v.relevance_score >= 8 ? "var(--green)" : v.relevance_score >= 5 ? "var(--gold)" : "var(--text-tertiary)",
+                              background: v.relevance_score >= 8 ? "var(--green-bg)" : v.relevance_score >= 5 ? "var(--gold-bg)" : "var(--bg-elevated)",
+                            }}
+                          >
+                            {v.relevance_score.toFixed(0)}/10
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs mt-1" style={{ color: "var(--text-tertiary)" }}>{v.channel_name}</p>
+
+                      <div className="flex items-center gap-5 mt-3">
+                        <div>
+                          <span className="text-sm font-semibold font-mono">{fmtNum(v.view_count)}</span>
+                          <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>views</span>
                         </div>
+                        <div>
+                          <span className="text-sm font-semibold font-mono" style={{ color: "var(--cyan)" }}>{fmtVPH(v.views_per_hour)}</span>
+                          <span className="text-[11px] ml-1" style={{ color: "var(--text-muted)" }}>velocity</span>
+                        </div>
+                      </div>
+
+                      {v.relevance_reason && (
+                        <p className="text-xs mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                          {v.relevance_reason}
+                        </p>
                       )}
                     </div>
                   </div>
