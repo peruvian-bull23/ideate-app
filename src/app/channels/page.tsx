@@ -10,6 +10,7 @@ interface Channel {
   channel_name: string;
   subscriber_count: number;
   video_count: number;
+  thumbnail_url: string | null;
   added_at: string;
 }
 
@@ -185,9 +186,17 @@ export default function ChannelsPage() {
                 className="bg-gray-900 border border-gray-800 rounded-xl p-6 flex items-center justify-between"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center text-xl">
-                    📺
-                  </div>
+                  {channel.thumbnail_url ? (
+                    <img
+                      src={channel.thumbnail_url}
+                      alt={channel.channel_name}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center text-xl">
+                      📺
+                    </div>
+                  )}
                   <div>
                     <h3 className="font-semibold">{channel.channel_name}</h3>
                     <p className="text-gray-500 text-sm">{channel.channel_id}</p>

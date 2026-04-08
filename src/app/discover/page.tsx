@@ -30,14 +30,14 @@ interface EnrichedChannel extends DiscoveredChannel {
   tracked?: TrackedData;
 }
 
-type SortKey = "subscriber_count" | "sub_growth" | "view_growth" | "discovered_at";
+type SortKey = "subscriber_count" | "sub_growth" | "view_growth";
 
 export default function DiscoverPage() {
   const [channels, setChannels] = useState<EnrichedChannel[]>([]);
   const [trackedIds, setTrackedIds] = useState<Set<string>>(new Set());
   const [ignoredIds, setIgnoredIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortKey>("discovered_at");
+  const [sortBy, setSortBy] = useState<SortKey>("sub_growth");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [showIgnored, setShowIgnored] = useState(false);
@@ -176,8 +176,6 @@ export default function DiscoverPage() {
     .filter((c) => !trackedIds.has(c.channel_id) && !ignoredIds.has(c.channel_id))
     .sort((a, b) => {
       switch (sortBy) {
-        case "discovered_at":
-          return new Date(b.discovered_at).getTime() - new Date(a.discovered_at).getTime();
         case "subscriber_count":
           return (b.tracked?.subscriber_count || b.subscriber_count || 0) - (a.tracked?.subscriber_count || a.subscriber_count || 0);
         case "sub_growth":
@@ -251,7 +249,6 @@ export default function DiscoverPage() {
           <div className="flex items-center gap-2">
             <span className="text-gray-500 text-sm">Sort by:</span>
             {([
-              { key: "discovered_at" as SortKey, label: "Newest" },
               { key: "sub_growth" as SortKey, label: "Sub Growth" },
               { key: "view_growth" as SortKey, label: "View Growth" },
               { key: "subscriber_count" as SortKey, label: "Subscribers" },
