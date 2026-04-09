@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
+import ExpandableText from "@/components/ExpandableText";
 
 interface DiscoveredChannel {
   id: number;
@@ -265,11 +266,13 @@ export default function DiscoverPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <h3 className="text-xl font-bold truncate">{ch.channel_name}</h3>
+                            <h3 className="text-2xl font-bold truncate">{ch.channel_name}</h3>
                             {t?.description && (
-                              <p className="text-base line-clamp-2 mt-1 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
-                                {t.description}
-                              </p>
+                              <ExpandableText
+                                text={t.description}
+                                className="text-base mt-1 leading-relaxed"
+                                style={{ color: "var(--text-tertiary)" }}
+                              />
                             )}
                           </div>
                           {t?.country && (

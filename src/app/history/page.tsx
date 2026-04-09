@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
+import ExpandableText from "@/components/ExpandableText";
 
 interface Result {
   id: number;
@@ -173,7 +174,7 @@ export default function HistoryPage() {
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-3">
-                                <a href={r.link} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold hover:text-[var(--gold)] transition-colors line-clamp-1">
+                                <a href={r.link} target="_blank" rel="noopener noreferrer" className="text-2xl font-bold hover:text-[var(--gold)] transition-colors line-clamp-1">
                                   {r.title}
                                 </a>
                                 <div className="flex items-center gap-3 shrink-0">
@@ -188,9 +189,11 @@ export default function HistoryPage() {
                               </div>
                               <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>{r.channel_name}</p>
                               {r.summary && (
-                                <p className="text-base mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
-                                  {r.summary}
-                                </p>
+                                <ExpandableText
+                                  text={r.summary}
+                                  className="text-base mt-2 leading-relaxed"
+                                  style={{ color: "var(--text-tertiary)" }}
+                                />
                               )}
                             </div>
                           </div>
@@ -228,7 +231,7 @@ export default function HistoryPage() {
                             ) : null}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-3">
-                                <a href={v.link} target="_blank" rel="noopener noreferrer" className="text-lg font-semibold hover:text-[var(--gold)] transition-colors line-clamp-1">
+                                <a href={v.link} target="_blank" rel="noopener noreferrer" className="text-2xl font-bold hover:text-[var(--gold)] transition-colors line-clamp-1">
                                   {v.title}
                                 </a>
                                 <div className="flex items-center gap-3 shrink-0">
@@ -251,9 +254,11 @@ export default function HistoryPage() {
                               </div>
                               <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>{v.channel_name}</p>
                               {v.relevance_reason && (
-                                <p className="text-base mt-2 line-clamp-2 leading-relaxed" style={{ color: "var(--text-tertiary)" }}>
-                                  {v.relevance_reason}
-                                </p>
+                                <ExpandableText
+                                  text={v.relevance_reason}
+                                  className="text-base mt-2 leading-relaxed"
+                                  style={{ color: "var(--text-tertiary)" }}
+                                />
                               )}
                             </div>
                           </div>

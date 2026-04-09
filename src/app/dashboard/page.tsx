@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
+import ExpandableText from "@/components/ExpandableText";
 import { User } from "@supabase/supabase-js";
 
 interface Result {
@@ -205,7 +206,7 @@ export default function DashboardPage() {
                           className="w-full aspect-video object-cover rounded-md mb-2 group-hover:opacity-80 transition-opacity"
                         />
                       )}
-                      <p className="text-base font-medium line-clamp-2 leading-snug group-hover:text-[var(--gold)] transition-colors">
+                      <p className="text-lg font-bold line-clamp-2 leading-snug group-hover:text-[var(--gold)] transition-colors">
                         {v.title}
                       </p>
                       <p className="text-base mt-1 font-mono" style={{ color: "var(--text-muted)" }}>
@@ -261,7 +262,7 @@ export default function DashboardPage() {
                           href={r.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-medium text-[15px] leading-snug hover:text-[var(--gold)] transition-colors line-clamp-1"
+                          className="font-bold text-2xl leading-snug hover:text-[var(--gold)] transition-colors line-clamp-1"
                         >
                           {r.title}
                         </a>
@@ -288,9 +289,11 @@ export default function DashboardPage() {
                       </div>
 
                       {r.summary && (
-                        <p className="text-base mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                          {r.summary}
-                        </p>
+                        <ExpandableText
+                          text={r.summary}
+                          className="text-base mt-3 leading-relaxed"
+                          style={{ color: "var(--text-secondary)" }}
+                        />
                       )}
 
                       {r.key_claims && r.key_claims.length > 0 && (
@@ -354,7 +357,7 @@ export default function DashboardPage() {
                           href={v.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-medium text-[15px] leading-snug hover:text-[var(--gold)] transition-colors line-clamp-1"
+                          className="font-bold text-2xl leading-snug hover:text-[var(--gold)] transition-colors line-clamp-1"
                         >
                           {v.title}
                         </a>
@@ -384,9 +387,11 @@ export default function DashboardPage() {
                       </div>
 
                       {v.relevance_reason && (
-                        <p className="text-base mt-3 line-clamp-2 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-                          {v.relevance_reason}
-                        </p>
+                        <ExpandableText
+                          text={v.relevance_reason}
+                          className="text-base mt-3 leading-relaxed"
+                          style={{ color: "var(--text-secondary)" }}
+                        />
                       )}
                     </div>
                   </div>
