@@ -44,6 +44,7 @@ interface Profile {
   trending_min_views_per_hour: number | null;
   trending_english_only: boolean | null;
   trending_max_age_hours: number | null;
+  email_schedule: string | null;
 }
 
 interface MyVideo {
@@ -65,6 +66,9 @@ export default function DashboardPage() {
   const [myVideos, setMyVideos] = useState<MyVideo[]>([]);
   const [channelCount, setChannelCount] = useState(0);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [lastEmailAt, setLastEmailAt] = useState<string | null>(null);
+  const [lastScan, setLastScan] = useState<{ completed_at: string; status: string; videos_found: number; videos_analyzed: number } | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -75,7 +79,7 @@ export default function DashboardPage() {
       setUser(user);
 
       // Load profile first to get trending preferences
-      const profileRes = await supabase.from("profiles").select("youtube_channel_name, my_channel_name, my_channel_thumbnail, my_channel_subs, my_channel_views, trending_min_views_per_hour, trending_english_only, trending_max_age_hours").eq("id", user.id).single();
+      const profileRes = await supabase.from("profiles").select("youtube_channel_name, my_channel_name, my_channel_thumbnail, my_channel_subs, my_channel_views, trending_min_views_per_hour, trending_english_only, trending_max_age_hours, email_schedule").eq("id", user.id).single();
       const prof = profileRes.data;
       setProfile(prof);
 
@@ -95,12 +99,14 @@ export default function DashboardPage() {
       }
       trendingQuery = trendingQuery.order("views_per_hour", { ascending: false }).limit(20);
 
-      const [resultsRes, trendingRes, channelCountRes, myVideosRes, savedRes] = await Promise.all([
+      const [resultsRes, trendingRes, channelCountRes, myVideosRes, savedRes, lastEmailRes, lastScanRes] = await Promise.all([
         supabase.from("results").select("*").eq("user_id", user.id).gte("created_at", today.toISOString()).order("outlier_score", { ascending: false }),
         trendingQuery,
         supabase.from("user_channels").select("*", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("my_recent_videos").select("*").eq("user_id", user.id).order("published_at", { ascending: false }).limit(4),
         supabase.from("saved_videos").select("video_id").eq("user_id", user.id),
+        supabase.from("emailed_videos").select("emailed_at").eq("user_id", user.id).order("emailed_at", { ascending: false }).limit(1),
+        supabase.from("scans").select("completed_at, status, videos_found, videos_analyzed").eq("user_id", user.id).order("completed_at", { ascending: false }).limit(1),
       ]);
 
       setResults(resultsRes.data || []);
@@ -108,6 +114,8 @@ export default function DashboardPage() {
       setMyVideos(myVideosRes.data || []);
       setChannelCount(channelCountRes.count || 0);
       setSavedIds(new Set((savedRes.data || []).map((s) => s.video_id)));
+      if (lastEmailRes.data && lastEmailRes.data.length > 0) setLastEmailAt(lastEmailRes.data[0].emailed_at);
+      if (lastScanRes.data && lastScanRes.data.length > 0) setLastScan(lastScanRes.data[0]);
       setLoading(false);
     }
     loadData();
@@ -189,6 +197,187 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {/* Email Digest Status */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>
+              Email Digest
+            </h2>
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-md text-base font-medium"
+              style={{
+                color: showPreview ? "var(--gold)" : "var(--text-muted)",
+                background: showPreview ? "var(--gold-bg)" : "var(--bg-elevated)",
+                border: showPreview ? "1px solid var(--gold-border)" : "1px solid transparent",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+              </svg>
+              {showPreview ? "Hide Preview" : "Preview Next Email"}
+            </button>
+          </div>
+
+          <div
+            className="rounded-lg p-5"
+            style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+          >
+            <div className="flex items-center gap-8">
+              <div>
+                <span className="text-base" style={{ color: "var(--text-muted)" }}>Last email sent</span>
+                <p className="text-lg font-semibold mt-0.5">
+                  {lastEmailAt
+                    ? new Date(lastEmailAt).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) + " at " + new Date(lastEmailAt).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+                    : "No emails sent yet"
+                  }
+                </p>
+              </div>
+              <div style={{ width: "1px", height: "36px", background: "var(--border-subtle)" }} />
+              <div>
+                <span className="text-base" style={{ color: "var(--text-muted)" }}>Last scan</span>
+                <p className="text-lg font-semibold mt-0.5">
+                  {lastScan
+                    ? new Date(lastScan.completed_at).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" }) + " at " + new Date(lastScan.completed_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+                    : "No scans yet"
+                  }
+                </p>
+              </div>
+              <div style={{ width: "1px", height: "36px", background: "var(--border-subtle)" }} />
+              <div>
+                <span className="text-base" style={{ color: "var(--text-muted)" }}>Schedule</span>
+                <p className="text-lg font-semibold mt-0.5" style={{ color: "var(--gold)" }}>
+                  {(() => {
+                    const scheduleMap: Record<string, string> = {
+                      daily: "Daily",
+                      weekdays: "Weekdays",
+                      weekly_monday: "Weekly (Mon)",
+                      weekly_sunday: "Weekly (Sun)",
+                      none: "Paused",
+                    };
+                    return scheduleMap[profile?.email_schedule || "daily"] || "Daily";
+                  })()}
+                </p>
+              </div>
+              {lastScan && (
+                <>
+                  <div style={{ width: "1px", height: "36px", background: "var(--border-subtle)" }} />
+                  <div>
+                    <span className="text-base" style={{ color: "var(--text-muted)" }}>Last scan found</span>
+                    <p className="text-lg font-semibold mt-0.5">
+                      {lastScan.videos_found} videos, {lastScan.videos_analyzed} analyzed
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Email Preview */}
+          {showPreview && (
+            <div
+              className="rounded-lg mt-3 overflow-hidden"
+              style={{ border: "1px solid var(--border-default)" }}
+            >
+              {/* Email header */}
+              <div className="px-5 py-4" style={{ background: "var(--bg-elevated)", borderBottom: "1px solid var(--border-subtle)" }}>
+                <div className="flex items-center gap-3 mb-2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--gold)" }}>
+                    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+                  </svg>
+                  <span className="text-lg font-bold" style={{ color: "var(--gold)" }}>Ideate Daily Digest</span>
+                </div>
+                <p className="text-base" style={{ color: "var(--text-muted)" }}>
+                  {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                  {profile?.youtube_channel_name ? ` — for ${profile.youtube_channel_name}` : ""}
+                </p>
+              </div>
+
+              <div className="px-5 py-5" style={{ background: "var(--bg-card)" }}>
+                {results.length === 0 && trending.length === 0 ? (
+                  <p className="text-base text-center py-6" style={{ color: "var(--text-muted)" }}>
+                    No outliers or trending videos to include. The email would not be sent today.
+                  </p>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Outliers preview */}
+                    {results.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-bold mb-3">
+                          Outlier Videos ({results.length})
+                        </h3>
+                        <div className="space-y-2">
+                          {results.slice(0, 5).map((r) => (
+                            <div key={r.id} className="flex items-center gap-3 py-2" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                              {r.video_id && (
+                                <img
+                                  src={`https://img.youtube.com/vi/${r.video_id}/default.jpg`}
+                                  alt="" className="w-16 h-12 object-cover rounded"
+                                />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-base font-medium truncate">{r.title}</p>
+                                <p className="text-base" style={{ color: "var(--text-muted)" }}>{r.channel_name}</p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className="text-base font-bold font-mono" style={{ color: "var(--gold)" }}>{r.outlier_score.toFixed(1)}x</span>
+                                <p className="text-base font-mono" style={{ color: "var(--text-muted)" }}>{fmtNum(r.view_count)} views</p>
+                              </div>
+                            </div>
+                          ))}
+                          {results.length > 5 && (
+                            <p className="text-base pt-2" style={{ color: "var(--text-muted)" }}>
+                              + {results.length - 5} more outlier{results.length - 5 !== 1 ? "s" : ""}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Trending preview */}
+                    {trending.length > 0 && (
+                      <div>
+                        <h3 className="text-lg font-bold mb-3">
+                          Trending in Your Niche ({trending.length})
+                        </h3>
+                        <div className="space-y-2">
+                          {trending.slice(0, 5).map((v) => (
+                            <div key={v.id} className="flex items-center gap-3 py-2" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+                              {v.thumbnail && (
+                                <img src={v.thumbnail} alt="" className="w-16 h-12 object-cover rounded" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-base font-medium truncate">{v.title}</p>
+                                <p className="text-base" style={{ color: "var(--text-muted)" }}>{v.channel_name}</p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className="text-base font-bold font-mono" style={{ color: "var(--cyan)" }}>{fmtVPH(v.views_per_hour)}</span>
+                                <p className="text-base font-mono" style={{ color: "var(--text-muted)" }}>{fmtNum(v.view_count)} views</p>
+                              </div>
+                            </div>
+                          ))}
+                          {trending.length > 5 && (
+                            <p className="text-base pt-2" style={{ color: "var(--text-muted)" }}>
+                              + {trending.length - 5} more trending video{trending.length - 5 !== 1 ? "s" : ""}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="px-5 py-3 text-center" style={{ background: "var(--bg-elevated)", borderTop: "1px solid var(--border-subtle)" }}>
+                <p className="text-base" style={{ color: "var(--text-muted)" }}>
+                  This is a preview of what your next email digest would contain.
+                </p>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* My Channel */}
         {profile?.my_channel_name && (
