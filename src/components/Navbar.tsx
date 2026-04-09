@@ -49,13 +49,49 @@ const icons = {
 export default function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [newCount, setNewCount] = useState(0);
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
-    });
+      if (!user) return;
+
+      // Get last_seen_at
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("last_seen_at")
+        .eq("id", user.id)
+        .single();
+
+      const lastSeen = profile?.last_seen_at || new Date(0).toISOString();
+
+      // Count new outliers + trending since last visit
+      const [outliersRes, trendingRes] = await Promise.all([
+        supabase.from("results").select("*", { count: "exact", head: true }).eq("user_id", user.id).gt("created_at", lastSeen),
+        supabase.from("discovery_trending_videos").select("*", { count: "exact", head: true }).eq("user_id", user.id).gt("discovered_at", lastSeen),
+      ]);
+
+      const total = (outliersRes.count || 0) + (trendingRes.count || 0);
+      setNewCount(total);
+
+      // Update last_seen_at if on dashboard
+      if (window.location.pathname === "/dashboard") {
+        await supabase.from("profiles").update({ last_seen_at: new Date().toISOString() }).eq("id", user.id);
+        setNewCount(0);
+      }
+    }
+    init();
   }, []);
+
+  // Update last_seen_at when navigating to dashboard
+  useEffect(() => {
+    if (pathname === "/dashboard" && user) {
+      supabase.from("profiles").update({ last_seen_at: new Date().toISOString() }).eq("id", user.id);
+      setNewCount(0);
+    }
+  }, [pathname]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -63,12 +99,12 @@ export default function Navbar() {
   };
 
   const links = [
-    { href: "/dashboard", label: "Dashboard", icon: icons.dashboard },
-    { href: "/channels", label: "Channels", icon: icons.channels },
-    { href: "/discover", label: "Discover", icon: icons.discover },
-    { href: "/saved", label: "Saved", icon: icons.saved },
-    { href: "/history", label: "History", icon: icons.history },
-    { href: "/settings", label: "Settings", icon: icons.settings },
+    { href: "/dashboard", label: "Dashboard", icon: icons.dashboard, badge: newCount },
+    { href: "/channels", label: "Channels", icon: icons.channels, badge: 0 },
+    { href: "/discover", label: "Discover", icon: icons.discover, badge: 0 },
+    { href: "/saved", label: "Saved", icon: icons.saved, badge: 0 },
+    { href: "/history", label: "History", icon: icons.history, badge: 0 },
+    { href: "/settings", label: "Settings", icon: icons.settings, badge: 0 },
   ];
 
   return (
@@ -96,7 +132,7 @@ export default function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[13px] font-medium"
+                    className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[13px] font-medium"
                     style={{
                       color: isActive ? "var(--gold)" : "var(--text-tertiary)",
                       background: isActive ? "var(--gold-bg)" : "transparent",
@@ -116,6 +152,14 @@ export default function Navbar() {
                   >
                     {link.icon}
                     {link.label}
+                    {link.badge > 0 && (
+                      <span
+                        className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1"
+                        style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
+                      >
+                        {link.badge > 99 ? "99+" : link.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
