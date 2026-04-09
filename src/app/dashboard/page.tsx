@@ -79,8 +79,16 @@ export default function DashboardPage() {
       setUser(user);
 
       // Load profile first to get trending preferences
-      const profileRes = await supabase.from("profiles").select("youtube_channel_name, my_channel_name, my_channel_thumbnail, my_channel_subs, my_channel_views, trending_min_views_per_hour, trending_english_only, trending_max_age_hours, email_schedule").eq("id", user.id).single();
+      const profileRes = await supabase.from("profiles").select("youtube_channel_name, my_channel_name, my_channel_thumbnail, my_channel_subs, my_channel_views, trending_min_views_per_hour, trending_english_only, trending_max_age_hours, email_schedule, discovery_niche, discovery_keywords").eq("id", user.id).single();
       const prof = profileRes.data;
+
+      // Check if onboarding needed
+      const { count: chCount } = await supabase.from("user_channels").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+      if (!prof?.discovery_niche && !prof?.discovery_keywords && (!chCount || chCount === 0)) {
+        window.location.href = "/onboarding";
+        return;
+      }
+
       setProfile(prof);
 
       const minVPH = prof?.trending_min_views_per_hour ?? 500;
