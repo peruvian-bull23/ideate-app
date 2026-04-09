@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import ExpandableText from "@/components/ExpandableText";
-import { downloadCSV } from "@/lib/csv";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 interface Channel {
@@ -166,34 +165,11 @@ export default function ChannelsPage() {
     <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
       <Navbar />
       <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight">Channels</h1>
-            <p className="text-lg mt-1" style={{ color: "var(--text-tertiary)" }}>
-              Manage the YouTube channels you&apos;re tracking
-            </p>
-          </div>
-          {channels.length > 0 && (
-            <button
-              onClick={() => {
-                const headers = ["Channel Name", "Channel ID", "Subscribers", "Total Views", "Videos", "Country", "Description", "Added"];
-                const rows = channels.map((ch) => [
-                  ch.channel_name, ch.channel_id, String(ch.subscriber_count || 0),
-                  String(ch.total_view_count || 0), String(ch.video_count || 0),
-                  ch.country || "", ch.description || "",
-                  new Date(ch.added_at).toLocaleDateString(),
-                ]);
-                downloadCSV("ideate-channels.csv", headers, rows);
-              }}
-              className="flex items-center gap-2 px-4 py-2 rounded-md text-base font-medium"
-              style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Export CSV
-            </button>
-          )}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold tracking-tight">Channels</h1>
+          <p className="text-lg mt-1" style={{ color: "var(--text-tertiary)" }}>
+            Manage the YouTube channels you&apos;re tracking
+          </p>
         </div>
 
         {/* Add Channel */}
