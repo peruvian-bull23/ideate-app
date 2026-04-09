@@ -13,6 +13,9 @@ interface Profile {
   discovery_keywords: string[] | null;
   discovery_min_subs: number | null;
   discovery_max_subs: number | null;
+  trending_min_views_per_hour: number | null;
+  trending_english_only: boolean | null;
+  trending_max_age_hours: number | null;
   plan: string;
 }
 
@@ -29,6 +32,9 @@ export default function SettingsPage() {
   const [keywords, setKeywords] = useState("");
   const [minSubs, setMinSubs] = useState(10000);
   const [maxSubs, setMaxSubs] = useState(1000000);
+  const [trendingMinVPH, setTrendingMinVPH] = useState(500);
+  const [trendingEnglishOnly, setTrendingEnglishOnly] = useState(true);
+  const [trendingMaxAge, setTrendingMaxAge] = useState(48);
 
   const supabase = createClient();
 
@@ -47,6 +53,9 @@ export default function SettingsPage() {
         setKeywords(data.discovery_keywords?.join(", ") || "");
         setMinSubs(data.discovery_min_subs ?? 10000);
         setMaxSubs(data.discovery_max_subs ?? 1000000);
+        setTrendingMinVPH(data.trending_min_views_per_hour ?? 500);
+        setTrendingEnglishOnly(data.trending_english_only ?? true);
+        setTrendingMaxAge(data.trending_max_age_hours ?? 48);
       }
       setLoading(false);
     }
@@ -71,6 +80,9 @@ export default function SettingsPage() {
       discovery_keywords: keywordsArray.length > 0 ? keywordsArray : null,
       discovery_min_subs: minSubs,
       discovery_max_subs: maxSubs,
+      trending_min_views_per_hour: trendingMinVPH,
+      trending_english_only: trendingEnglishOnly,
+      trending_max_age_hours: trendingMaxAge,
     }).eq("id", user.id);
 
     setMessage(error ? "Failed to save settings" : "Saved");
@@ -181,6 +193,72 @@ export default function SettingsPage() {
               <div className="flex justify-between text-base mt-1" style={{ color: "var(--text-muted)" }}>
                 <span>1.5x — More results</span>
                 <span>10x — Only top viral</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Trending Videos */}
+          <section className="rounded-lg p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
+            <h2 className="text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+              Trending Videos
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-base font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>
+                  Minimum Views per Hour: <span className="font-mono" style={{ color: "var(--gold)" }}>{trendingMinVPH.toLocaleString()}</span>
+                </label>
+                <input
+                  type="range" min="0" max="5000" step="100"
+                  value={trendingMinVPH} onChange={(e) => setTrendingMinVPH(parseInt(e.target.value))}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-base mt-1" style={{ color: "var(--text-muted)" }}>
+                  <span>0 — Show all</span>
+                  <span>5,000 — Only fast movers</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-base font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>
+                  Max Video Age: <span className="font-mono" style={{ color: "var(--gold)" }}>{trendingMaxAge}h</span>
+                </label>
+                <input
+                  type="range" min="6" max="168" step="6"
+                  value={trendingMaxAge} onChange={(e) => setTrendingMaxAge(parseInt(e.target.value))}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-base mt-1" style={{ color: "var(--text-muted)" }}>
+                  <span>6h — Very fresh only</span>
+                  <span>168h (7 days)</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <label className="block text-base font-medium" style={{ color: "var(--text-tertiary)" }}>
+                    English Only
+                  </label>
+                  <p className="text-base mt-0.5" style={{ color: "var(--text-muted)" }}>
+                    Only show videos in English
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setTrendingEnglishOnly(!trendingEnglishOnly)}
+                  className="relative w-12 h-7 rounded-full transition-colors"
+                  style={{
+                    background: trendingEnglishOnly ? "var(--gold)" : "var(--bg-elevated)",
+                    border: trendingEnglishOnly ? "none" : "1px solid var(--border-default)",
+                  }}
+                >
+                  <span
+                    className="absolute top-0.5 w-6 h-6 rounded-full transition-transform"
+                    style={{
+                      background: trendingEnglishOnly ? "var(--bg-primary)" : "var(--text-muted)",
+                      left: trendingEnglishOnly ? "calc(100% - 1.625rem)" : "0.125rem",
+                    }}
+                  />
+                </button>
               </div>
             </div>
           </section>

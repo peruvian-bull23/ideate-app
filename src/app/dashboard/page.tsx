@@ -40,6 +40,9 @@ interface Profile {
   my_channel_thumbnail: string | null;
   my_channel_subs: number | null;
   my_channel_views: number | null;
+  trending_min_views_per_hour: number | null;
+  trending_english_only: boolean | null;
+  trending_max_age_hours: number | null;
 }
 
 interface MyVideo {
@@ -69,18 +72,27 @@ export default function DashboardPage() {
       if (!user) { window.location.href = "/login"; return; }
       setUser(user);
 
+      // Load profile first to get trending preferences
+      const profileRes = await supabase.from("profiles").select("youtube_channel_name, my_channel_name, my_channel_thumbnail, my_channel_subs, my_channel_views, trending_min_views_per_hour, trending_english_only, trending_max_age_hours").eq("id", user.id).single();
+      const prof = profileRes.data;
+      setProfile(prof);
+
+      const minVPH = prof?.trending_min_views_per_hour ?? 500;
+      const maxAgeHours = prof?.trending_max_age_hours ?? 48;
+
+      const cutoff = new Date();
+      cutoff.setHours(cutoff.getHours() - maxAgeHours);
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const [profileRes, resultsRes, trendingRes, channelCountRes, myVideosRes] = await Promise.all([
-        supabase.from("profiles").select("youtube_channel_name, my_channel_name, my_channel_thumbnail, my_channel_subs, my_channel_views").eq("id", user.id).single(),
+      const [resultsRes, trendingRes, channelCountRes, myVideosRes] = await Promise.all([
         supabase.from("results").select("*").eq("user_id", user.id).gte("created_at", today.toISOString()).order("outlier_score", { ascending: false }),
-        supabase.from("discovery_trending_videos").select("*").eq("user_id", user.id).gte("discovered_at", today.toISOString()).order("views_per_hour", { ascending: false }).limit(20),
+        supabase.from("discovery_trending_videos").select("*").eq("user_id", user.id).gte("discovered_at", cutoff.toISOString()).gte("views_per_hour", minVPH).order("views_per_hour", { ascending: false }).limit(20),
         supabase.from("user_channels").select("*", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("my_recent_videos").select("*").eq("user_id", user.id).order("published_at", { ascending: false }).limit(4),
       ]);
 
-      setProfile(profileRes.data);
       setResults(resultsRes.data || []);
       setTrending(trendingRes.data || []);
       setMyVideos(myVideosRes.data || []);
