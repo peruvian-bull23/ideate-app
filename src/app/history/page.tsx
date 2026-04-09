@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import ExpandableText from "@/components/ExpandableText";
+import BookmarkButton from "@/components/BookmarkButton";
 
 interface Result {
   id: number;
@@ -39,6 +40,7 @@ interface DayData {
 
 export default function HistoryPage() {
   const [days, setDays] = useState<Map<string, DayData>>(new Map());
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -47,9 +49,10 @@ export default function HistoryPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { window.location.href = "/login"; return; }
 
-      const [resultsRes, trendingRes] = await Promise.all([
+      const [resultsRes, trendingRes, savedRes] = await Promise.all([
         supabase.from("results").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(200),
         supabase.from("discovery_trending_videos").select("*").eq("user_id", user.id).order("discovered_at", { ascending: false }).limit(200),
+        supabase.from("saved_videos").select("video_id").eq("user_id", user.id),
       ]);
 
       const dayMap = new Map<string, DayData>();
@@ -67,6 +70,7 @@ export default function HistoryPage() {
       });
 
       setDays(dayMap);
+      setSavedIds(new Set((savedRes.data || []).map((s) => s.video_id)));
       setLoading(false);
     }
     loadHistory();
@@ -82,6 +86,14 @@ export default function HistoryPage() {
     if (!v) return "—";
     if (v >= 1000) return (v / 1000).toFixed(1) + "K/hr";
     return v.toFixed(0) + "/hr";
+  };
+
+  const handleBookmarkToggle = (videoId: string, saved: boolean) => {
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      if (saved) next.add(videoId); else next.delete(videoId);
+      return next;
+    });
   };
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-US", {
@@ -185,6 +197,18 @@ export default function HistoryPage() {
                                   <span className="text-base font-semibold px-2 py-0.5 rounded" style={sentimentStyle(r.sentiment)}>
                                     {r.sentiment?.toUpperCase() || "NEUTRAL"}
                                   </span>
+                                  <BookmarkButton
+                                    videoId={r.video_id}
+                                    title={r.title}
+                                    channelName={r.channel_name}
+                                    link={r.link}
+                                    viewCount={r.view_count}
+                                    outlierScore={r.outlier_score}
+                                    summary={r.summary}
+                                    sentiment={r.sentiment}
+                                    isSaved={savedIds.has(r.video_id)}
+                                    onToggle={handleBookmarkToggle}
+                                  />
                                 </div>
                               </div>
                               <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>{r.channel_name}</p>
@@ -250,6 +274,16 @@ export default function HistoryPage() {
                                       {v.relevance_score.toFixed(0)}/10
                                     </span>
                                   )}
+                                  <BookmarkButton
+                                    videoId={v.video_id}
+                                    title={v.title}
+                                    channelName={v.channel_name}
+                                    link={v.link}
+                                    viewCount={v.view_count}
+                                    thumbnail={v.thumbnail}
+                                    isSaved={savedIds.has(v.video_id)}
+                                    onToggle={handleBookmarkToggle}
+                                  />
                                 </div>
                               </div>
                               <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>{v.channel_name}</p>

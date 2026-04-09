@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import ExpandableText from "@/components/ExpandableText";
+import BookmarkButton from "@/components/BookmarkButton";
 import { User } from "@supabase/supabase-js";
 
 interface Result {
@@ -63,6 +64,7 @@ export default function DashboardPage() {
   const [trending, setTrending] = useState<TrendingVideo[]>([]);
   const [myVideos, setMyVideos] = useState<MyVideo[]>([]);
   const [channelCount, setChannelCount] = useState(0);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
@@ -93,17 +95,19 @@ export default function DashboardPage() {
       }
       trendingQuery = trendingQuery.order("views_per_hour", { ascending: false }).limit(20);
 
-      const [resultsRes, trendingRes, channelCountRes, myVideosRes] = await Promise.all([
+      const [resultsRes, trendingRes, channelCountRes, myVideosRes, savedRes] = await Promise.all([
         supabase.from("results").select("*").eq("user_id", user.id).gte("created_at", today.toISOString()).order("outlier_score", { ascending: false }),
         trendingQuery,
         supabase.from("user_channels").select("*", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("my_recent_videos").select("*").eq("user_id", user.id).order("published_at", { ascending: false }).limit(4),
+        supabase.from("saved_videos").select("video_id").eq("user_id", user.id),
       ]);
 
       setResults(resultsRes.data || []);
       setTrending(trendingRes.data || []);
       setMyVideos(myVideosRes.data || []);
       setChannelCount(channelCountRes.count || 0);
+      setSavedIds(new Set((savedRes.data || []).map((s) => s.video_id)));
       setLoading(false);
     }
     loadData();
@@ -113,6 +117,14 @@ export default function DashboardPage() {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
     if (n >= 1000) return (n / 1000).toFixed(0) + "K";
     return n.toString();
+  };
+
+  const handleBookmarkToggle = (videoId: string, saved: boolean) => {
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      if (saved) next.add(videoId); else next.delete(videoId);
+      return next;
+    });
   };
 
   const fmtVPH = (v: number) => {
@@ -291,6 +303,18 @@ export default function DashboardPage() {
                         >
                           {r.sentiment?.toUpperCase() || "NEUTRAL"}
                         </span>
+                        <BookmarkButton
+                          videoId={r.video_id}
+                          title={r.title}
+                          channelName={r.channel_name}
+                          link={r.link}
+                          viewCount={r.view_count}
+                          outlierScore={r.outlier_score}
+                          summary={r.summary}
+                          sentiment={r.sentiment}
+                          isSaved={savedIds.has(r.video_id)}
+                          onToggle={handleBookmarkToggle}
+                        />
                       </div>
                       <p className="text-base mt-1" style={{ color: "var(--text-tertiary)" }}>{r.channel_name}</p>
 
@@ -391,6 +415,16 @@ export default function DashboardPage() {
                             {v.relevance_score.toFixed(0)}/10
                           </div>
                         )}
+                        <BookmarkButton
+                          videoId={v.video_id}
+                          title={v.title}
+                          channelName={v.channel_name}
+                          link={v.link}
+                          viewCount={v.view_count}
+                          thumbnail={v.thumbnail}
+                          isSaved={savedIds.has(v.video_id)}
+                          onToggle={handleBookmarkToggle}
+                        />
                       </div>
                       <p className="text-base mt-1" style={{ color: "var(--text-tertiary)" }}>{v.channel_name}</p>
 

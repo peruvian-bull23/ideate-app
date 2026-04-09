@@ -39,6 +39,11 @@ const icons = {
       <circle cx="12" cy="12" r="3" />
     </svg>
   ),
+  saved: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+    </svg>
+  ),
 };
 
 export default function Navbar() {
@@ -61,6 +66,7 @@ export default function Navbar() {
     { href: "/dashboard", label: "Dashboard", icon: icons.dashboard },
     { href: "/channels", label: "Channels", icon: icons.channels },
     { href: "/discover", label: "Discover", icon: icons.discover },
+    { href: "/saved", label: "Saved", icon: icons.saved },
     { href: "/history", label: "History", icon: icons.history },
     { href: "/settings", label: "Settings", icon: icons.settings },
   ];
