@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import ExpandableText from "@/components/ExpandableText";
 import BookmarkButton from "@/components/BookmarkButton";
+import { downloadCSV } from "@/lib/csv";
 
 interface Result {
   id: number;
@@ -126,11 +127,44 @@ export default function HistoryPage() {
     <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
       <Navbar />
       <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold tracking-tight">History</h1>
-          <p className="text-lg mt-1" style={{ color: "var(--text-tertiary)" }}>
-            Browse past outliers and trending videos
-          </p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">History</h1>
+            <p className="text-lg mt-1" style={{ color: "var(--text-tertiary)" }}>
+              Browse past outliers and trending videos
+            </p>
+          </div>
+          {sortedDates.length > 0 && (
+            <button
+              onClick={() => {
+                const allOutliers = [...days.values()].flatMap((d) => d.outliers);
+                const allTrending = [...days.values()].flatMap((d) => d.trending);
+                const headers = ["Type", "Title", "Channel", "Views", "Score", "Velocity", "Sentiment", "Summary", "Link", "Date"];
+                const rows = [
+                  ...allOutliers.map((r) => [
+                    "Outlier", r.title, r.channel_name, String(r.view_count),
+                    r.outlier_score.toFixed(1) + "x", "", r.sentiment || "", r.summary || "",
+                    r.link, new Date(r.created_at).toLocaleDateString(),
+                  ]),
+                  ...allTrending.map((v) => [
+                    "Trending", v.title, v.channel_name, String(v.view_count),
+                    v.relevance_score > 0 ? v.relevance_score.toFixed(0) + "/10" : "",
+                    v.views_per_hour ? v.views_per_hour.toFixed(0) + "/hr" : "",
+                    "", v.relevance_reason || "", v.link,
+                    new Date(v.discovered_at).toLocaleDateString(),
+                  ]),
+                ];
+                downloadCSV("ideate-history.csv", headers, rows);
+              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-md text-base font-medium"
+              style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Export CSV
+            </button>
+          )}
         </div>
 
         {sortedDates.length === 0 ? (
