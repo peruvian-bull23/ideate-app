@@ -139,7 +139,7 @@ export default function Navbar() {
                     }}
                     onMouseEnter={(e) => {
                       if (!isActive) {
-                        e.currentTarget.style.color = "var(--text-secondary)";
+                        e.currentTarget.style.color = "var(--text-primary)";
                         e.currentTarget.style.background = "var(--bg-hover)";
                       }
                     }}
@@ -170,25 +170,25 @@ export default function Navbar() {
             {user && (
               <>
                 <span
-                  className="text-[12px]"
-                  style={{ color: "var(--text-muted)" }}
+                  className="text-[13px]"
+                  style={{ color: "var(--text-secondary)" }}
                 >
                   {user.email}
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="text-[12px] px-3 py-1 rounded-md"
+                  className="text-[13px] px-3 py-1 rounded-md"
                   style={{
-                    color: "var(--text-tertiary)",
+                    color: "var(--text-secondary)",
                     border: "1px solid var(--border-subtle)",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = "var(--border-hover)";
-                    e.currentTarget.style.color = "var(--text-secondary)";
+                    e.currentTarget.style.color = "var(--text-primary)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = "var(--border-subtle)";
-                    e.currentTarget.style.color = "var(--text-tertiary)";
+                    e.currentTarget.style.color = "var(--text-secondary)";
                   }}
                 >
                   Sign Out

@@ -13,9 +13,9 @@
   --border-hover: #3F3F46;
 
   --text-primary: #FAFAFA;
-  --text-secondary: #A1A1AA;
-  --text-tertiary: #71717A;
-  --text-muted: #52525B;
+  --text-secondary: #E4E4E7;
+  --text-tertiary: #D4D4D8;
+  --text-muted: #A1A1AA;
 
   --gold: #D4A846;
   --gold-light: #E8C56D;
@@ -130,4 +130,16 @@ input[type="range"]::-moz-range-thumb {
   background: var(--gold);
   cursor: pointer;
   border: none;
+}
+
+/* Placeholder text */
+::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Select dropdowns */
+select option {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
 }
