@@ -122,7 +122,7 @@ export default function Navbar() {
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
               </svg>
-              <span className="text-[21px] font-semibold tracking-tight">Ideate</span>
+              <span className="text-[25px] font-semibold tracking-tight">Ideate</span>
             </Link>
 
             <div className="flex items-center gap-0.5">
@@ -132,7 +132,7 @@ export default function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[18px] font-medium"
+                    className="relative flex items-center gap-2 px-3.5 py-1.5 rounded-md text-[22px] font-medium"
                     style={{
                       color: isActive ? "var(--gold)" : "var(--text-tertiary)",
                       background: isActive ? "var(--gold-bg)" : "transparent",
@@ -177,7 +177,7 @@ export default function Navbar() {
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="text-[18px] px-3 py-1 rounded-md"
+                  className="text-[22px] px-3 py-1 rounded-md"
                   style={{
                     color: "var(--text-secondary)",
                     border: "1px solid var(--border-subtle)",
