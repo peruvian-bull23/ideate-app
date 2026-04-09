@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 import ExpandableText from "@/components/ExpandableText";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 interface Channel {
   id: number;
@@ -18,12 +19,22 @@ interface Channel {
   added_at: string;
 }
 
+interface GrowthPoint {
+  recorded_at: string;
+  subscriber_count: number;
+  view_count: number;
+  date: string;
+}
+
 export default function ChannelsPage() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [channelUrl, setChannelUrl] = useState("");
   const [error, setError] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [growthData, setGrowthData] = useState<Map<string, GrowthPoint[]>>(new Map());
+  const [growthLoading, setGrowthLoading] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => { loadChannels(); }, []);
@@ -39,6 +50,33 @@ export default function ChannelsPage() {
 
     setChannels(data || []);
     setLoading(false);
+  }
+
+  async function toggleExpand(channelId: string) {
+    if (expandedId === channelId) {
+      setExpandedId(null);
+      return;
+    }
+
+    setExpandedId(channelId);
+
+    // Load growth data if not cached
+    if (!growthData.has(channelId)) {
+      setGrowthLoading(channelId);
+      const { data } = await supabase
+        .from("channel_growth_history")
+        .select("subscriber_count, view_count, recorded_at")
+        .eq("channel_id", channelId)
+        .order("recorded_at", { ascending: true });
+
+      const points: GrowthPoint[] = (data || []).map((d) => ({
+        ...d,
+        date: new Date(d.recorded_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      }));
+
+      setGrowthData((prev) => new Map(prev).set(channelId, points));
+      setGrowthLoading(null);
+    }
   }
 
   async function addChannel(e: React.FormEvent) {
@@ -105,6 +143,13 @@ export default function ChannelsPage() {
     return `Added ${Math.floor(days / 365)}y ago`;
   };
 
+  const tooltipStyle = {
+    backgroundColor: "var(--bg-elevated)",
+    border: "1px solid var(--border-default)",
+    borderRadius: "6px",
+    fontSize: "13px",
+  };
+
   if (loading) {
     return (
       <div style={{ minHeight: "100vh", background: "var(--bg-primary)" }}>
@@ -167,6 +212,9 @@ export default function ChannelsPage() {
           <div className="space-y-3">
             {channels.map((ch) => {
               const url = channelUrl2(ch.channel_id, ch.channel_name);
+              const isExpanded = expandedId === ch.channel_id;
+              const points = growthData.get(ch.channel_id) || [];
+              const isGrowthLoading = growthLoading === ch.channel_id;
 
               return (
                 <div
@@ -238,9 +286,23 @@ export default function ChannelsPage() {
 
                   {/* Action bar */}
                   <div
-                    className="flex items-center justify-end px-5 py-2.5"
+                    className="flex items-center justify-between px-5 py-2.5"
                     style={{ borderTop: "1px solid var(--border-subtle)" }}
                   >
+                    <button
+                      onClick={(e) => { e.preventDefault(); toggleExpand(ch.channel_id); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded text-base font-medium"
+                      style={{
+                        color: isExpanded ? "var(--gold)" : "var(--text-muted)",
+                        background: isExpanded ? "var(--gold-bg)" : "var(--bg-elevated)",
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 3v18h18" />
+                        <path d="m19 9-5 5-4-4-3 3" />
+                      </svg>
+                      {isExpanded ? "Hide Growth" : "Growth Chart"}
+                    </button>
                     <button
                       onClick={(e) => removeChannel(e, ch.channel_id)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded text-base font-medium"
@@ -254,6 +316,160 @@ export default function ChannelsPage() {
                       Remove
                     </button>
                   </div>
+
+                  {/* Growth Chart Panel */}
+                  {isExpanded && (
+                    <div
+                      className="px-5 py-5"
+                      style={{ borderTop: "1px solid var(--border-subtle)", background: "var(--bg-secondary)" }}
+                    >
+                      {isGrowthLoading ? (
+                        <div className="text-center py-8">
+                          <span className="text-base" style={{ color: "var(--text-muted)" }}>Loading growth data...</span>
+                        </div>
+                      ) : points.length === 0 ? (
+                        <div className="text-center py-8">
+                          <span className="text-base" style={{ color: "var(--text-muted)" }}>No growth data yet. Data will accumulate daily.</span>
+                        </div>
+                      ) : points.length === 1 ? (
+                        <div className="text-center py-8">
+                          <p className="text-base" style={{ color: "var(--text-tertiary)" }}>
+                            First snapshot recorded on {points[0].date}
+                          </p>
+                          <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>
+                            Growth charts will appear once more daily snapshots are collected.
+                          </p>
+                          <div className="flex items-center justify-center gap-8 mt-4">
+                            <div>
+                              <span className="text-lg font-bold font-mono">{fmtNum(points[0].subscriber_count)}</span>
+                              <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>subs</span>
+                            </div>
+                            <div>
+                              <span className="text-lg font-bold font-mono">{fmtNum(points[0].view_count)}</span>
+                              <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>views</span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Subscribers Chart */}
+                            <div>
+                              <h4 className="text-base font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>
+                                Subscribers
+                              </h4>
+                              <ResponsiveContainer width="100%" height={200}>
+                                <LineChart data={points}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
+                                  <XAxis
+                                    dataKey="date"
+                                    tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                                    axisLine={{ stroke: "var(--border-subtle)" }}
+                                    tickLine={false}
+                                  />
+                                  <YAxis
+                                    tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tickFormatter={(v) => fmtNum(v)}
+                                    width={50}
+                                  />
+                                  <Tooltip
+                                    contentStyle={tooltipStyle}
+                                    labelStyle={{ color: "var(--text-secondary)" }}
+                                    formatter={(value) => [Number(value).toLocaleString(), "Subscribers"]}
+                                  />
+                                  <Line
+                                    type="monotone"
+                                    dataKey="subscriber_count"
+                                    stroke="var(--gold)"
+                                    strokeWidth={2}
+                                    dot={{ fill: "var(--gold)", r: 3 }}
+                                    activeDot={{ r: 5, fill: "var(--gold-light)" }}
+                                  />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+
+                            {/* Views Chart */}
+                            <div>
+                              <h4 className="text-base font-semibold mb-3" style={{ color: "var(--text-secondary)" }}>
+                                Total Views
+                              </h4>
+                              <ResponsiveContainer width="100%" height={200}>
+                                <LineChart data={points}>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
+                                  <XAxis
+                                    dataKey="date"
+                                    tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                                    axisLine={{ stroke: "var(--border-subtle)" }}
+                                    tickLine={false}
+                                  />
+                                  <YAxis
+                                    tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tickFormatter={(v) => fmtNum(v)}
+                                    width={55}
+                                  />
+                                  <Tooltip
+                                    contentStyle={tooltipStyle}
+                                    labelStyle={{ color: "var(--text-secondary)" }}
+                                    formatter={(value) => [Number(value).toLocaleString(), "Views"]}
+                                  />
+                                  <Line
+                                    type="monotone"
+                                    dataKey="view_count"
+                                    stroke="var(--cyan)"
+                                    strokeWidth={2}
+                                    dot={{ fill: "var(--cyan)", r: 3 }}
+                                    activeDot={{ r: 5, fill: "#a5f3fc" }}
+                                  />
+                                </LineChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </div>
+
+                          {/* Growth summary */}
+                          {points.length >= 2 && (
+                            <div className="flex items-center gap-6 mt-4 pt-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+                              {(() => {
+                                const first = points[0];
+                                const last = points[points.length - 1];
+                                const subDiff = last.subscriber_count - first.subscriber_count;
+                                const viewDiff = last.view_count - first.view_count;
+                                const subPct = first.subscriber_count > 0 ? (subDiff / first.subscriber_count * 100) : 0;
+                                const viewPct = first.view_count > 0 ? (viewDiff / first.view_count * 100) : 0;
+                                return (
+                                  <>
+                                    <div>
+                                      <span className="text-base font-bold font-mono" style={{ color: subDiff >= 0 ? "var(--green)" : "var(--red)" }}>
+                                        {subDiff >= 0 ? "+" : ""}{fmtNum(subDiff)}
+                                      </span>
+                                      <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>
+                                        subs ({subPct >= 0 ? "+" : ""}{subPct.toFixed(1)}%)
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <span className="text-base font-bold font-mono" style={{ color: viewDiff >= 0 ? "var(--green)" : "var(--red)" }}>
+                                        {viewDiff >= 0 ? "+" : ""}{fmtNum(viewDiff)}
+                                      </span>
+                                      <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>
+                                        views ({viewPct >= 0 ? "+" : ""}{viewPct.toFixed(1)}%)
+                                      </span>
+                                    </div>
+                                    <span className="text-base" style={{ color: "var(--text-muted)" }}>
+                                      over {points.length} days
+                                    </span>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
