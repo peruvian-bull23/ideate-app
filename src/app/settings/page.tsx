@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
-import { downloadCSV } from "@/lib/csv";
 
 interface Profile {
   email: string;
@@ -414,79 +413,83 @@ export default function SettingsPage() {
               const trending = trendingRes.data || [];
               const discovered = discoverRes.data || [];
 
+              const escape = (val: string) => {
+                if (val.includes(",") || val.includes('"') || val.includes("\n")) {
+                  return '"' + val.replace(/"/g, '""') + '"';
+                }
+                return val;
+              };
+              const row = (cells: string[]) => cells.map(escape).join(",");
+
+              const sections: string[] = [];
+
               // Outlier Results
-              if (results.length > 0) {
-                downloadCSV("ideate-outlier-results.csv",
-                  ["Title", "Channel", "Views", "Outlier Score", "Sentiment", "Summary", "Link", "Date"],
-                  results.map((r) => [
-                    r.title || "", r.channel_name || "", String(r.view_count || 0),
-                    r.outlier_score ? r.outlier_score.toFixed(1) + "x" : "", r.sentiment || "",
-                    r.summary || "", r.link || "", new Date(r.created_at).toLocaleDateString(),
-                  ])
-                );
-              }
+              sections.push("=== OUTLIER RESULTS (" + results.length + ") ===");
+              sections.push(row(["Title", "Channel", "Views", "Outlier Score", "Sentiment", "Summary", "Link", "Date"]));
+              results.forEach((r) => sections.push(row([
+                r.title || "", r.channel_name || "", String(r.view_count || 0),
+                r.outlier_score ? r.outlier_score.toFixed(1) + "x" : "", r.sentiment || "",
+                r.summary || "", r.link || "", new Date(r.created_at).toLocaleDateString(),
+              ])));
+
+              sections.push("");
 
               // Saved Videos
-              if (saved.length > 0) {
-                setTimeout(() => {
-                  downloadCSV("ideate-saved-videos.csv",
-                    ["Title", "Channel", "Views", "Outlier Score", "Sentiment", "Summary", "Link", "Saved On"],
-                    saved.map((v) => [
-                      v.title || "", v.channel_name || "", String(v.view_count || 0),
-                      v.outlier_score ? Number(v.outlier_score).toFixed(1) + "x" : "",
-                      v.sentiment || "", v.summary || "", v.link || "",
-                      new Date(v.saved_at).toLocaleDateString(),
-                    ])
-                  );
-                }, 300);
-              }
+              sections.push("=== SAVED VIDEOS (" + saved.length + ") ===");
+              sections.push(row(["Title", "Channel", "Views", "Outlier Score", "Sentiment", "Summary", "Link", "Saved On"]));
+              saved.forEach((v) => sections.push(row([
+                v.title || "", v.channel_name || "", String(v.view_count || 0),
+                v.outlier_score ? Number(v.outlier_score).toFixed(1) + "x" : "",
+                v.sentiment || "", v.summary || "", v.link || "",
+                new Date(v.saved_at).toLocaleDateString(),
+              ])));
+
+              sections.push("");
 
               // Tracked Channels
-              if (channels.length > 0) {
-                setTimeout(() => {
-                  downloadCSV("ideate-tracked-channels.csv",
-                    ["Channel Name", "Channel ID", "Subscribers", "Total Views", "Videos", "Country", "Description", "Added"],
-                    channels.map((ch) => [
-                      ch.channel_name || "", ch.channel_id || "", String(ch.subscriber_count || 0),
-                      String(ch.total_view_count || 0), String(ch.video_count || 0),
-                      ch.country || "", ch.description || "",
-                      new Date(ch.added_at).toLocaleDateString(),
-                    ])
-                  );
-                }, 600);
-              }
+              sections.push("=== TRACKED CHANNELS (" + channels.length + ") ===");
+              sections.push(row(["Channel Name", "Channel ID", "Subscribers", "Total Views", "Videos", "Country", "Description", "Added"]));
+              channels.forEach((ch) => sections.push(row([
+                ch.channel_name || "", ch.channel_id || "", String(ch.subscriber_count || 0),
+                String(ch.total_view_count || 0), String(ch.video_count || 0),
+                ch.country || "", ch.description || "",
+                new Date(ch.added_at).toLocaleDateString(),
+              ])));
+
+              sections.push("");
 
               // Trending Videos
-              if (trending.length > 0) {
-                setTimeout(() => {
-                  downloadCSV("ideate-trending-videos.csv",
-                    ["Title", "Channel", "Views", "Views/Hour", "Relevance Score", "Relevance Reason", "Link", "Discovered"],
-                    trending.map((v) => [
-                      v.title || "", v.channel_name || "", String(v.view_count || 0),
-                      v.views_per_hour ? v.views_per_hour.toFixed(0) : "",
-                      v.relevance_score ? v.relevance_score.toFixed(0) + "/10" : "",
-                      v.relevance_reason || "", v.link || "",
-                      new Date(v.discovered_at).toLocaleDateString(),
-                    ])
-                  );
-                }, 900);
-              }
+              sections.push("=== TRENDING VIDEOS (" + trending.length + ") ===");
+              sections.push(row(["Title", "Channel", "Views", "Views/Hour", "Relevance Score", "Relevance Reason", "Link", "Discovered"]));
+              trending.forEach((v) => sections.push(row([
+                v.title || "", v.channel_name || "", String(v.view_count || 0),
+                v.views_per_hour ? v.views_per_hour.toFixed(0) : "",
+                v.relevance_score ? v.relevance_score.toFixed(0) + "/10" : "",
+                v.relevance_reason || "", v.link || "",
+                new Date(v.discovered_at).toLocaleDateString(),
+              ])));
+
+              sections.push("");
 
               // Discovered Channels
-              if (discovered.length > 0) {
-                setTimeout(() => {
-                  downloadCSV("ideate-discovered-channels.csv",
-                    ["Channel Name", "Channel ID", "Subscribers", "Videos", "Discovered From", "Discovered On"],
-                    discovered.map((ch) => [
-                      ch.channel_name || "", ch.channel_id || "",
-                      String(ch.subscriber_count || 0), String(ch.video_count || 0),
-                      ch.discovered_from || "", new Date(ch.discovered_at).toLocaleDateString(),
-                    ])
-                  );
-                }, 1200);
-              }
+              sections.push("=== DISCOVERED CHANNELS (" + discovered.length + ") ===");
+              sections.push(row(["Channel Name", "Channel ID", "Subscribers", "Videos", "Discovered From", "Discovered On"]));
+              discovered.forEach((ch) => sections.push(row([
+                ch.channel_name || "", ch.channel_id || "",
+                String(ch.subscriber_count || 0), String(ch.video_count || 0),
+                ch.discovered_from || "", new Date(ch.discovered_at).toLocaleDateString(),
+              ])));
 
-              setTimeout(() => setExporting(false), 1500);
+              const csv = sections.join("\n");
+              const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "ideate-export-" + new Date().toISOString().slice(0, 10) + ".csv";
+              a.click();
+              URL.revokeObjectURL(url);
+
+              setExporting(false);
             }}
             disabled={exporting}
             className="flex items-center gap-2.5 px-6 py-3 rounded-md text-base font-semibold disabled:opacity-50"
@@ -498,7 +501,7 @@ export default function SettingsPage() {
             {exporting ? "Exporting..." : "Export All Data"}
           </button>
           <p className="text-base mt-2" style={{ color: "var(--text-muted)" }}>
-            Downloads up to 5 CSV files depending on available data.
+            Downloads a single CSV with all your data organized by section.
           </p>
         </section>
       </main>
