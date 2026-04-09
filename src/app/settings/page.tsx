@@ -11,6 +11,8 @@ interface Profile {
   outlier_threshold: number;
   discovery_niche: string | null;
   discovery_keywords: string[] | null;
+  discovery_min_subs: number | null;
+  discovery_max_subs: number | null;
   plan: string;
 }
 
@@ -25,6 +27,8 @@ export default function SettingsPage() {
   const [outlierThreshold, setOutlierThreshold] = useState(2.0);
   const [discoveryNiche, setDiscoveryNiche] = useState("");
   const [keywords, setKeywords] = useState("");
+  const [minSubs, setMinSubs] = useState(10000);
+  const [maxSubs, setMaxSubs] = useState(1000000);
 
   const supabase = createClient();
 
@@ -41,6 +45,8 @@ export default function SettingsPage() {
         setOutlierThreshold(data.outlier_threshold || 2.0);
         setDiscoveryNiche(data.discovery_niche || "");
         setKeywords(data.discovery_keywords?.join(", ") || "");
+        setMinSubs(data.discovery_min_subs ?? 10000);
+        setMaxSubs(data.discovery_max_subs ?? 1000000);
       }
       setLoading(false);
     }
@@ -63,6 +69,8 @@ export default function SettingsPage() {
       outlier_threshold: outlierThreshold,
       discovery_niche: discoveryNiche || null,
       discovery_keywords: keywordsArray.length > 0 ? keywordsArray : null,
+      discovery_min_subs: minSubs,
+      discovery_max_subs: maxSubs,
     }).eq("id", user.id);
 
     setMessage(error ? "Failed to save settings" : "Saved");
@@ -204,6 +212,79 @@ export default function SettingsPage() {
                 <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>
                   Comma-separated keywords for trending video discovery
                 </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-base font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>
+                    Minimum Subscribers
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={minSubs.toLocaleString()}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value.replace(/[^0-9]/g, "")) || 0;
+                        setMinSubs(val);
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-md text-base font-mono"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>
+                    Filter out channels below this size
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-base font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>
+                    Maximum Subscribers
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={maxSubs.toLocaleString()}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value.replace(/[^0-9]/g, "")) || 0;
+                        setMaxSubs(val);
+                      }}
+                      className="w-full px-3.5 py-2.5 rounded-md text-base font-mono"
+                      style={inputStyle}
+                    />
+                  </div>
+                  <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>
+                    Filter out established channels above this size
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick presets */}
+              <div>
+                <label className="block text-base font-medium mb-2" style={{ color: "var(--text-tertiary)" }}>
+                  Quick Presets
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { label: "Small (1K–50K)", min: 1000, max: 50000 },
+                    { label: "Mid (10K–500K)", min: 10000, max: 500000 },
+                    { label: "Growth (10K–1M)", min: 10000, max: 1000000 },
+                    { label: "Large (100K–5M)", min: 100000, max: 5000000 },
+                    { label: "All sizes", min: 0, max: 100000000 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => { setMinSubs(preset.min); setMaxSubs(preset.max); }}
+                      className="px-3 py-1.5 rounded-md text-base font-medium"
+                      style={{
+                        color: minSubs === preset.min && maxSubs === preset.max ? "var(--gold)" : "var(--text-muted)",
+                        background: minSubs === preset.min && maxSubs === preset.max ? "var(--gold-bg)" : "var(--bg-elevated)",
+                        border: minSubs === preset.min && maxSubs === preset.max ? "1px solid var(--gold-border)" : "1px solid transparent",
+                      }}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </section>
