@@ -79,6 +79,7 @@ export default function DashboardPage() {
 
       const minVPH = prof?.trending_min_views_per_hour ?? 500;
       const maxAgeHours = prof?.trending_max_age_hours ?? 48;
+      const englishOnly = prof?.trending_english_only ?? true;
 
       const cutoff = new Date();
       cutoff.setHours(cutoff.getHours() - maxAgeHours);
@@ -86,9 +87,15 @@ export default function DashboardPage() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      let trendingQuery = supabase.from("discovery_trending_videos").select("*").eq("user_id", user.id).gte("discovered_at", cutoff.toISOString()).gte("views_per_hour", minVPH);
+      if (englishOnly) {
+        trendingQuery = trendingQuery.eq("language", "en");
+      }
+      trendingQuery = trendingQuery.order("views_per_hour", { ascending: false }).limit(20);
+
       const [resultsRes, trendingRes, channelCountRes, myVideosRes] = await Promise.all([
         supabase.from("results").select("*").eq("user_id", user.id).gte("created_at", today.toISOString()).order("outlier_score", { ascending: false }),
-        supabase.from("discovery_trending_videos").select("*").eq("user_id", user.id).gte("discovered_at", cutoff.toISOString()).gte("views_per_hour", minVPH).order("views_per_hour", { ascending: false }).limit(20),
+        trendingQuery,
         supabase.from("user_channels").select("*", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("my_recent_videos").select("*").eq("user_id", user.id).order("published_at", { ascending: false }).limit(4),
       ]);
