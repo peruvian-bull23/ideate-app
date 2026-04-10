@@ -169,12 +169,6 @@ export default function Navbar() {
           <div className="flex items-center gap-4">
             {user && (
               <>
-                <span
-                  className="text-[13px]"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  {user.email}
-                </span>
                 <button
                   onClick={handleSignOut}
                   className="text-[22px] px-3 py-1 rounded-md"
