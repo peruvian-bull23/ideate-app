@@ -45,6 +45,7 @@ const inputStyle = {
 // Step 1: Your Channel
 function StepChannel({ onNext }: StepProps) {
   const [channelName, setChannelName] = useState("");
+  const [channelUrl, setChannelUrl] = useState("");
   const [niche, setNiche] = useState("");
   const supabase = createClient();
 
@@ -52,10 +53,30 @@ function StepChannel({ onNext }: StepProps) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Save profile fields
     await supabase.from("profiles").update({
       youtube_channel_name: channelName || null,
       discovery_niche: niche || null,
     }).eq("id", user.id);
+
+    // If they provided a channel URL, try to extract and save the channel ID
+    if (channelUrl.trim()) {
+      let channelId = channelUrl.trim();
+      const patterns = [
+        /youtube\.com\/channel\/([a-zA-Z0-9_-]+)/,
+        /youtube\.com\/@([a-zA-Z0-9_-]+)/,
+        /youtube\.com\/c\/([a-zA-Z0-9_-]+)/,
+        /youtube\.com\/user\/([a-zA-Z0-9_-]+)/,
+      ];
+      for (const p of patterns) {
+        const m = channelUrl.match(p);
+        if (m) { channelId = m[1]; break; }
+      }
+
+      await supabase.from("profiles").update({
+        my_channel_id: channelId,
+      }).eq("id", user.id);
+    }
 
     onNext();
   }
@@ -81,8 +102,22 @@ function StepChannel({ onNext }: StepProps) {
             style={inputStyle}
             autoFocus
           />
+        </div>
+
+        <div>
+          <label className="block text-base font-medium mb-1.5" style={{ color: "var(--text-tertiary)" }}>
+            Your YouTube channel URL
+          </label>
+          <input
+            type="text"
+            value={channelUrl}
+            onChange={(e) => setChannelUrl(e.target.value)}
+            placeholder="e.g., youtube.com/@PeruvianBull"
+            className="w-full px-4 py-3 rounded-md text-base"
+            style={inputStyle}
+          />
           <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>
-            Optional — used to personalize your dashboard and emails.
+            We&apos;ll track your channel stats and show your recent videos on the dashboard.
           </p>
         </div>
 
@@ -104,13 +139,22 @@ function StepChannel({ onNext }: StepProps) {
         </div>
       </div>
 
-      <button
-        onClick={handleNext}
-        className="w-full mt-8 py-3 rounded-md text-base font-semibold"
-        style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
-      >
-        Continue
-      </button>
+      <div className="flex gap-3 mt-8">
+        <button
+          onClick={onNext}
+          className="px-6 py-3 rounded-md text-base font-medium"
+          style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
+        >
+          Skip
+        </button>
+        <button
+          onClick={handleNext}
+          className="flex-1 py-3 rounded-md text-base font-semibold"
+          style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
+        >
+          Continue
+        </button>
+      </div>
     </div>
   );
 }
@@ -120,11 +164,13 @@ function StepKeywords({ onNext, onBack }: StepProps) {
   const [keywords, setKeywords] = useState("");
   const supabase = createClient();
 
+  const keywordsArray = keywords.split(",").map((k) => k.trim()).filter((k) => k.length > 0);
+  const count = keywordsArray.length;
+  const hasEnough = count >= 5;
+
   async function handleNext() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    const keywordsArray = keywords.split(",").map((k) => k.trim()).filter((k) => k.length > 0);
 
     await supabase.from("profiles").update({
       discovery_keywords: keywordsArray.length > 0 ? keywordsArray : null,
@@ -153,9 +199,22 @@ function StepKeywords({ onNext, onBack }: StepProps) {
           style={inputStyle}
           autoFocus
         />
-        <p className="text-base mt-1" style={{ color: "var(--text-muted)" }}>
-          The more specific, the better. You can always change these later in Settings.
-        </p>
+        <div className="flex items-center justify-between mt-2">
+          <p className="text-base" style={{ color: "var(--text-muted)" }}>
+            The more specific, the better. You can always change these later in Settings.
+          </p>
+          <span
+            className="text-base font-mono font-semibold shrink-0 ml-4"
+            style={{ color: hasEnough ? "var(--green)" : count > 0 ? "var(--gold)" : "var(--text-muted)" }}
+          >
+            {count}/5{hasEnough ? " ✓" : ""}
+          </span>
+        </div>
+        {count > 0 && count < 5 && (
+          <p className="text-base mt-2" style={{ color: "var(--gold)" }}>
+            We recommend at least 5 keywords for the best discovery results. Add {5 - count} more.
+          </p>
+        )}
       </div>
 
       <div className="flex gap-3 mt-8">
@@ -165,6 +224,13 @@ function StepKeywords({ onNext, onBack }: StepProps) {
           style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
         >
           Back
+        </button>
+        <button
+          onClick={onNext}
+          className="px-6 py-3 rounded-md text-base font-medium"
+          style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
+        >
+          Skip
         </button>
         <button
           onClick={handleNext}
@@ -284,10 +350,17 @@ function StepChannels({ onNext, onBack }: StepProps) {
         </button>
         <button
           onClick={onNext}
+          className="px-6 py-3 rounded-md text-base font-medium"
+          style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
+        >
+          Skip
+        </button>
+        <button
+          onClick={onNext}
           className="flex-1 py-3 rounded-md text-base font-semibold"
           style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
         >
-          {channels.length === 0 ? "Skip for Now" : "Continue"}
+          Continue
         </button>
       </div>
     </div>
