@@ -296,6 +296,16 @@ function StepChannels({ onNext, onBack }: StepProps) {
 
 // Step 4: Done
 function StepComplete() {
+  const supabase = createClient();
+
+  async function finish() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("profiles").update({ onboarding_completed: true }).eq("id", user.id);
+    }
+    window.location.href = "/dashboard";
+  }
+
   return (
     <div className="text-center py-8">
       <div className="text-5xl mb-4">✨</div>
@@ -325,7 +335,7 @@ function StepComplete() {
       </div>
 
       <button
-        onClick={() => { window.location.href = "/dashboard"; }}
+        onClick={finish}
         className="px-8 py-3 rounded-md text-lg font-semibold"
         style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
       >
@@ -345,12 +355,9 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { window.location.href = "/login"; return; }
 
-      // Check if user has already completed onboarding
-      const { data: profile } = await supabase.from("profiles").select("youtube_channel_name, discovery_niche, discovery_keywords").eq("id", user.id).single();
-      const { count } = await supabase.from("user_channels").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+      const { data: profile } = await supabase.from("profiles").select("onboarding_completed").eq("id", user.id).single();
 
-      // If they have a niche or keywords or channels, they've been through setup
-      if (profile?.discovery_niche || profile?.discovery_keywords || (count && count > 0)) {
+      if (profile?.onboarding_completed) {
         window.location.href = "/dashboard";
         return;
       }
