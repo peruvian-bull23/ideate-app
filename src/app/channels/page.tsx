@@ -35,6 +35,7 @@ export default function ChannelsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [growthData, setGrowthData] = useState<Map<string, GrowthPoint[]>>(new Map());
   const [growthLoading, setGrowthLoading] = useState<string | null>(null);
+  const [curveSamples, setCurveSamples] = useState<Map<string, number>>(new Map());
   const supabase = createClient();
 
   useEffect(() => { loadChannels(); }, []);
@@ -43,12 +44,21 @@ export default function ChannelsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { window.location.href = "/login"; return; }
 
-    const { data } = await supabase
-      .from("user_channels").select("*")
-      .eq("user_id", user.id)
-      .order("added_at", { ascending: false });
+    const [channelsRes, curveRes] = await Promise.all([
+      supabase.from("user_channels").select("*").eq("user_id", user.id).order("added_at", { ascending: false }),
+      supabase.from("channel_view_curves").select("channel_id, sample_count"),
+    ]);
 
-    setChannels(data || []);
+    setChannels(channelsRes.data || []);
+
+    if (curveRes.data) {
+      const map = new Map<string, number>();
+      curveRes.data.forEach((row) => {
+        map.set(row.channel_id, (map.get(row.channel_id) || 0) + (row.sample_count || 0));
+      });
+      setCurveSamples(map);
+    }
+
     setLoading(false);
   }
 
@@ -276,6 +286,28 @@ export default function ChannelsPage() {
                           <span className="text-base" style={{ color: "var(--text-muted)" }}>
                             {timeAgo(ch.added_at)}
                           </span>
+                          {(() => {
+                            const samples = curveSamples.get(ch.channel_id) || 0;
+                            if (samples >= 10) {
+                              return (
+                                <span className="text-base font-medium px-2 py-0.5 rounded" style={{ color: "var(--green)", background: "var(--green-bg)" }}>
+                                  ✓ View curve ready
+                                </span>
+                              );
+                            } else if (samples > 0) {
+                              return (
+                                <span className="text-base font-medium px-2 py-0.5 rounded" style={{ color: "var(--gold)", background: "var(--gold-bg)" }}>
+                                  Collecting data ({samples}/10 samples)
+                                </span>
+                              );
+                            } else {
+                              return (
+                                <span className="text-base font-medium px-2 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
+                                  Awaiting first scan
+                                </span>
+                              );
+                            }
+                          })()}
                           <span className="text-base font-mono" style={{ color: "var(--text-muted)" }}>
                             {ch.channel_id}
                           </span>

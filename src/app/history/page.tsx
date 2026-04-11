@@ -16,6 +16,7 @@ interface Result {
   link: string;
   summary: string;
   sentiment: string;
+  used_view_curve: boolean;
   created_at: string;
 }
 
@@ -193,6 +194,15 @@ export default function HistoryPage() {
                                   <span className="text-base font-mono font-semibold">{fmtNum(r.view_count)}</span>
                                   <span className="text-base font-mono font-semibold" style={{ color: "var(--gold)" }}>
                                     {r.outlier_score.toFixed(1)}x
+                                  </span>
+                                  <span
+                                    className="text-base font-medium px-2 py-0.5 rounded"
+                                    style={r.used_view_curve
+                                      ? { color: "var(--green)", background: "var(--green-bg)" }
+                                      : { color: "var(--gold)", background: "var(--gold-bg)" }
+                                    }
+                                  >
+                                    {r.used_view_curve ? "✓ Curve" : "↗ Est."}
                                   </span>
                                   <span className="text-base font-semibold px-2 py-0.5 rounded" style={sentimentStyle(r.sentiment)}>
                                     {r.sentiment?.toUpperCase() || "NEUTRAL"}

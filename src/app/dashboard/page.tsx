@@ -18,6 +18,7 @@ interface Result {
   summary: string;
   sentiment: string;
   key_claims: string[];
+  used_view_curve: boolean;
   created_at: string;
 }
 
@@ -525,6 +526,15 @@ export default function DashboardPage() {
                           </span>
                           <span className="text-base ml-1" style={{ color: "var(--text-muted)" }}>score</span>
                         </div>
+                        <span
+                          className="text-base font-medium px-2.5 py-0.5 rounded"
+                          style={r.used_view_curve
+                            ? { color: "var(--green)", background: "var(--green-bg)" }
+                            : { color: "var(--gold)", background: "var(--gold-bg)" }
+                          }
+                        >
+                          {r.used_view_curve ? "✓ View Curve" : "↗ Estimated"}
+                        </span>
                       </div>
 
                       {r.summary && (
