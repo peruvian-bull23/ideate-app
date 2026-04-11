@@ -75,10 +75,15 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="mt-5 text-center text-xs" style={{ color: "var(--text-muted)" }}>
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" style={{ color: "var(--gold)" }} className="hover:underline">Sign Up</Link>
-          </p>
+          <div className="flex items-center justify-between mt-5">
+            <Link href="/forgot-password" style={{ color: "var(--text-muted)" }} className="text-xs hover:underline">
+              Forgot password?
+            </Link>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" style={{ color: "var(--gold)" }} className="hover:underline">Sign Up</Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

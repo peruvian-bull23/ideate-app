@@ -24,6 +24,9 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [message, setMessage] = useState("");
 
   const [channelName, setChannelName] = useState("");
@@ -503,6 +506,89 @@ export default function SettingsPage() {
           <p className="text-base mt-2" style={{ color: "var(--text-muted)" }}>
             Downloads a single CSV with all your data organized by section.
           </p>
+        </section>
+
+        {/* Danger Zone */}
+        <section className="rounded-lg p-5 mt-8" style={{ background: "var(--bg-card)", border: "1px solid rgba(248,113,113,0.2)" }}>
+          <h2 className="text-xl font-bold mb-2" style={{ color: "var(--red)" }}>
+            Danger Zone
+          </h2>
+          <p className="text-base mb-4" style={{ color: "var(--text-tertiary)" }}>
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-md text-base font-medium"
+              style={{ color: "var(--red)", background: "var(--red-bg)", border: "1px solid rgba(248,113,113,0.2)" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+              </svg>
+              Delete Account
+            </button>
+          ) : (
+            <div className="rounded-md p-4" style={{ background: "var(--bg-elevated)", border: "1px solid rgba(248,113,113,0.3)" }}>
+              <p className="text-base font-medium mb-3" style={{ color: "var(--text-primary)" }}>
+                Type <span className="font-mono font-bold" style={{ color: "var(--red)" }}>DELETE</span> to confirm:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Type DELETE"
+                className="w-full px-3.5 py-2.5 rounded-md text-base font-mono mb-3"
+                style={{
+                  background: "var(--bg-primary)",
+                  border: "1px solid rgba(248,113,113,0.3)",
+                  color: "var(--text-primary)",
+                  outline: "none",
+                }}
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText(""); }}
+                  className="px-4 py-2 rounded-md text-base font-medium"
+                  style={{ color: "var(--text-muted)", background: "var(--bg-card)" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (deleteConfirmText !== "DELETE") return;
+                    setDeleting(true);
+
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) return;
+
+                    // Delete user data from all tables
+                    await Promise.all([
+                      supabase.from("results").delete().eq("user_id", user.id),
+                      supabase.from("saved_videos").delete().eq("user_id", user.id),
+                      supabase.from("user_channels").delete().eq("user_id", user.id),
+                      supabase.from("discovery_trending_videos").delete().eq("user_id", user.id),
+                      supabase.from("ignored_discovery_channels").delete().eq("user_id", user.id),
+                      supabase.from("emailed_videos").delete().eq("user_id", user.id),
+                      supabase.from("scans").delete().eq("user_id", user.id),
+                      supabase.from("my_recent_videos").delete().eq("user_id", user.id),
+                      supabase.from("profiles").delete().eq("id", user.id),
+                    ]);
+
+                    // Sign out
+                    await supabase.auth.signOut();
+                    window.location.href = "/login";
+                  }}
+                  disabled={deleteConfirmText !== "DELETE" || deleting}
+                  className="px-4 py-2 rounded-md text-base font-semibold disabled:opacity-30"
+                  style={{ background: "var(--red)", color: "#fff" }}
+                >
+                  {deleting ? "Deleting..." : "Permanently Delete Account"}
+                </button>
+              </div>
+            </div>
+          )}
         </section>
       </main>
     </div>
