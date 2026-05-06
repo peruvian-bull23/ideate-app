@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = "force-dynamic";
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const youtubeApiKey = process.env.YOUTUBE_API_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 interface VideoInfo {
   id: string;
@@ -89,6 +89,7 @@ async function fetchTranscript(videoId: string): Promise<string | null> {
 }
 
 export async function POST(request: NextRequest) {
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
   try {
     const { channel_id, top_n = 40 } = await request.json();
     
