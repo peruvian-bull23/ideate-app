@@ -90,15 +90,37 @@ async function getVideoDetails(videoIds: string[]): Promise<VideoInfo[]> {
 
 async function fetchTranscript(videoId: string): Promise<string | null> {
   try {
-    const url = `https://yt.lemnoslife.com/noKey/videos?part=transcript&id=${videoId}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
-    if (!res.ok) return null;
-    
-    const data = await res.json();
-    const transcriptData = data.items?.[0]?.transcript?.content;
-    if (!transcriptData || !Array.isArray(transcriptData)) return null;
-    
-    return transcriptData.map((entry: any) => entry.text || "").join(" ") || null;
+    // Method 1: Try YouTube's innertube API for captions
+    const watchUrl = `https://www.youtube.com/watch?v=${videoId}`;
+    const watchRes = await fetch(watchUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!watchRes.ok) return null;
+
+    const html = await watchRes.text();
+
+    // Extract captions URL from the page
+    const captionMatch = html.match(/"captionTracks":\[.*?"baseUrl":"(.*?)"/);
+    if (!captionMatch) return null;
+
+    const captionUrl = captionMatch[1].replace(/\\u0026/g, "&");
+    const captionRes = await fetch(captionUrl, { signal: AbortSignal.timeout(10000) });
+    if (!captionRes.ok) return null;
+
+    const xml = await captionRes.text();
+
+    // Parse the XML transcript
+    const textMatches = xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g);
+    const lines: string[] = [];
+    for (const match of textMatches) {
+      let text = match[1];
+      // Decode HTML entities
+      text = text.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\n/g, " ");
+      if (text.trim()) lines.push(text.trim());
+    }
+
+    return lines.length > 0 ? lines.join(" ") : null;
   } catch {
     return null;
   }
