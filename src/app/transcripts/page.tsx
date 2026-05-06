@@ -27,8 +27,10 @@ interface ApiResponse {
 export default function TranscriptsPage() {
   const [channelUrl, setChannelUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [videos, setVideos] = useState<VideoResult[]>([]);
   const [channelName, setChannelName] = useState("");
+  const [channelId, setChannelId] = useState("");
   const [error, setError] = useState("");
   const [topN, setTopN] = useState(25);
   const supabase = createClient();
@@ -73,6 +75,7 @@ export default function TranscriptsPage() {
 
       const data: ApiResponse = await response.json();
       setChannelName(data.channel_name || channelId);
+      setChannelId(channelId);
       setVideos(data.videos || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch transcripts. Please try again.");
@@ -217,16 +220,50 @@ export default function TranscriptsPage() {
                 )}
               </div>
               {withTranscripts.length > 0 && (
-                <button
-                  onClick={downloadAllTranscripts}
-                  className="flex items-center gap-2 px-4 py-2 rounded-md text-base font-semibold"
-                  style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  Download All ({withTranscripts.length})
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={downloadAllTranscripts}
+                    className="flex items-center gap-2 px-4 py-2 rounded-md text-base font-semibold"
+                    style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    .txt ({withTranscripts.length})
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setDownloadingPdf(true);
+                      try {
+                        const response = await fetch("/api/transcripts/download-pdf", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ channel_id: channelId, top_n: topN }),
+                        });
+                        if (!response.ok) throw new Error("PDF generation failed");
+                        const blob = await response.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `transcripts-${channelName.replace(/[^a-zA-Z0-9]/g, "-")}.zip`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch {
+                        setError("Failed to generate PDFs. Try again.");
+                      }
+                      setDownloadingPdf(false);
+                    }}
+                    disabled={downloadingPdf}
+                    className="flex items-center gap-2 px-4 py-2 rounded-md text-base font-semibold disabled:opacity-50"
+                    style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+                      <path d="M14 2v6h6" />
+                    </svg>
+                    {downloadingPdf ? "Generating..." : `PDF Zip (${withTranscripts.length})`}
+                  </button>
+                </div>
               )}
             </div>
 
