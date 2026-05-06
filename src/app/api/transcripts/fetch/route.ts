@@ -18,9 +18,25 @@ interface VideoInfo {
 }
 
 async function getChannelInfo(channelId: string): Promise<{ name: string; uploadsPlaylist: string } | null> {
-  const url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&id=${channelId}&key=${youtubeApiKey}`;
-  const res = await fetch(url);
-  const data = await res.json();
+  // Try by ID first (UC... format)
+  let url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&id=${channelId}&key=${youtubeApiKey}`;
+  let res = await fetch(url);
+  let data = await res.json();
+  
+  // If not found by ID, try by handle (@ format)
+  if (!data.items || data.items.length === 0) {
+    const handle = channelId.replace(/^@/, "");
+    url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&forHandle=${handle}&key=${youtubeApiKey}`;
+    res = await fetch(url);
+    data = await res.json();
+  }
+
+  // If still not found, try by username
+  if (!data.items || data.items.length === 0) {
+    url = `https://www.googleapis.com/youtube/v3/channels?part=snippet,contentDetails&forUsername=${channelId}&key=${youtubeApiKey}`;
+    res = await fetch(url);
+    data = await res.json();
+  }
   
   if (!data.items || data.items.length === 0) return null;
   
