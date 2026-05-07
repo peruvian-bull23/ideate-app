@@ -62,7 +62,7 @@ export default function TranscriptsPage() {
         if (m) { channelId = m[1]; break; }
       }
 
-      const response = await fetch("https://celebrated-reprieve-production.up.railway.app/api/transcripts/fetch", {
+      const response = await fetch("https://content-machine-production-a06b.up.railway.app/api/transcripts/fetch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ channel_id: channelId, top_n: topN }),
@@ -235,7 +235,7 @@ export default function TranscriptsPage() {
                     onClick={async () => {
                       setDownloadingPdf(true);
                       try {
-                        const response = await fetch("https://celebrated-reprieve-production.up.railway.app/api/transcripts/download-pdf", {
+                        const response = await fetch("https://content-machine-production-a06b.up.railway.app/api/transcripts/download-pdf", {
                           method: "POST",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({ channel_id: channelId, top_n: topN }),
