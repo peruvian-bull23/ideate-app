@@ -83,12 +83,10 @@ export default function TranscriptsPage() {
         console.log("Railway error:", e);
       }
 
-      console.log("Searching Supabase with:", { resolvedChannelId, channelId, handle });
-
       // Step 2: Search Supabase - try multiple approaches
-      // First try with resolved channel ID
-      let dbResults = null;
-      
+      let dbResults: VideoTranscript[] | null = null;
+
+      // Try with resolved channel ID (if Railway worked)
       if (resolvedChannelId !== channelId) {
         const res = await supabase
           .from("channel_video_transcripts")
@@ -96,11 +94,10 @@ export default function TranscriptsPage() {
           .eq("channel_id", resolvedChannelId)
           .order("view_count", { ascending: false })
           .limit(topN);
-        console.log("Supabase by resolved ID:", res.data?.length, res.error);
         if (res.data && res.data.length > 0) dbResults = res.data;
       }
 
-      // Then try by raw channel ID
+      // Try by raw channel ID (works if they paste a UC... ID)
       if (!dbResults) {
         const res = await supabase
           .from("channel_video_transcripts")
@@ -108,21 +105,47 @@ export default function TranscriptsPage() {
           .eq("channel_id", channelId)
           .order("view_count", { ascending: false })
           .limit(topN);
-        console.log("Supabase by raw ID:", res.data?.length, res.error);
         if (res.data && res.data.length > 0) dbResults = res.data;
       }
 
-      // Then try by channel name
-      if (!dbResults) {
-        const searchName = resolvedChannelName || handle;
+      // Try by resolved channel name from Railway
+      if (!dbResults && resolvedChannelName) {
         const res = await supabase
           .from("channel_video_transcripts")
           .select("*")
-          .ilike("channel_name", `%${searchName}%`)
+          .ilike("channel_name", `%${resolvedChannelName}%`)
           .order("view_count", { ascending: false })
           .limit(topN);
-        console.log("Supabase by name:", searchName, res.data?.length, res.error);
         if (res.data && res.data.length > 0) dbResults = res.data;
+      }
+
+      // Try by handle as name (exact and partial)
+      if (!dbResults) {
+        const res = await supabase
+          .from("channel_video_transcripts")
+          .select("*")
+          .ilike("channel_name", `%${handle}%`)
+          .order("view_count", { ascending: false })
+          .limit(topN);
+        if (res.data && res.data.length > 0) dbResults = res.data;
+      }
+
+      // Try progressively shorter prefixes of the handle
+      if (!dbResults && handle.length > 4) {
+        for (let len = Math.min(handle.length - 2, 15); len >= 4; len -= 2) {
+          const prefix = handle.substring(0, len);
+          const res = await supabase
+            .from("channel_video_transcripts")
+            .select("*")
+            .ilike("channel_name", `%${prefix}%`)
+            .order("view_count", { ascending: false })
+            .limit(topN);
+          console.log(`Supabase by prefix '${prefix}':`, res.data?.length);
+          if (res.data && res.data.length > 0) {
+            dbResults = res.data;
+            break;
+          }
+        }
       }
 
       if (dbResults && dbResults.length > 0) {
