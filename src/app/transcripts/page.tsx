@@ -59,72 +59,29 @@ export default function TranscriptsPage() {
     try {
       const channelId = extractChannelId(channelUrl);
       const handle = channelId.replace(/^@/, "");
-      let resolvedChannelId = channelId;
-      let resolvedChannelName = "";
 
-      // Step 1: Try Railway to resolve the handle to a real channel ID
-      try {
-        console.log("Resolving channel via Railway:", channelId);
-        const response = await fetch("https://content-machine-production-a06b.up.railway.app/api/transcripts/fetch", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ channel_id: channelId, top_n: 1 }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Railway resolved:", data.channel_id, data.channel_name);
-          if (data.channel_id) resolvedChannelId = data.channel_id;
-          if (data.channel_name) resolvedChannelName = data.channel_name;
-        } else {
-          console.log("Railway returned:", response.status);
-        }
-      } catch (e) {
-        console.log("Railway error:", e);
-      }
-
-      // Step 2: Search Supabase - try multiple approaches
+      // Search Supabase with multiple strategies
       let dbResults: VideoTranscript[] | null = null;
 
-      // Try with resolved channel ID (if Railway worked)
-      if (resolvedChannelId !== channelId) {
-        const res = await supabase
-          .from("channel_video_transcripts")
-          .select("*")
-          .eq("channel_id", resolvedChannelId)
-          .order("view_count", { ascending: false })
-          .limit(topN);
-        if (res.data && res.data.length > 0) dbResults = res.data;
-      }
-
-      // Try by raw channel ID (works if they paste a UC... ID)
+      // Try exact channel_id match (works for UC... IDs)
       if (!dbResults) {
         const res = await supabase
           .from("channel_video_transcripts")
           .select("*")
           .eq("channel_id", channelId)
+          .not("transcript", "is", null)
           .order("view_count", { ascending: false })
           .limit(topN);
         if (res.data && res.data.length > 0) dbResults = res.data;
       }
 
-      // Try by resolved channel name from Railway
-      if (!dbResults && resolvedChannelName) {
-        const res = await supabase
-          .from("channel_video_transcripts")
-          .select("*")
-          .ilike("channel_name", `%${resolvedChannelName}%`)
-          .order("view_count", { ascending: false })
-          .limit(topN);
-        if (res.data && res.data.length > 0) dbResults = res.data;
-      }
-
-      // Try by handle as name (exact and partial)
+      // Try exact channel name match
       if (!dbResults) {
         const res = await supabase
           .from("channel_video_transcripts")
           .select("*")
           .ilike("channel_name", `%${handle}%`)
+          .not("transcript", "is", null)
           .order("view_count", { ascending: false })
           .limit(topN);
         if (res.data && res.data.length > 0) dbResults = res.data;
@@ -132,15 +89,15 @@ export default function TranscriptsPage() {
 
       // Try progressively shorter prefixes of the handle
       if (!dbResults && handle.length > 4) {
-        for (let len = Math.min(handle.length - 2, 15); len >= 4; len -= 2) {
+        for (let len = Math.min(handle.length - 2, 15); len >= 3; len--) {
           const prefix = handle.substring(0, len);
           const res = await supabase
             .from("channel_video_transcripts")
             .select("*")
             .ilike("channel_name", `%${prefix}%`)
+            .not("transcript", "is", null)
             .order("view_count", { ascending: false })
             .limit(topN);
-          console.log(`Supabase by prefix '${prefix}':`, res.data?.length);
           if (res.data && res.data.length > 0) {
             dbResults = res.data;
             break;
@@ -149,34 +106,10 @@ export default function TranscriptsPage() {
       }
 
       if (dbResults && dbResults.length > 0) {
-        setChannelName(dbResults[0].channel_name || resolvedChannelName || channelId);
+        setChannelName(dbResults[0].channel_name || channelId);
         setVideos(dbResults);
         setLoading(false);
         return;
-      }
-
-      // Step 3: If Supabase has nothing, show videos from Railway (without transcripts)
-      if (resolvedChannelName) {
-        // Re-fetch with full top_n
-        try {
-          const response = await fetch("https://content-machine-production-a06b.up.railway.app/api/transcripts/fetch", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ channel_id: resolvedChannelId, top_n: topN }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            if (data.videos && data.videos.length > 0) {
-              setChannelName(data.channel_name || channelId);
-              setVideos(data.videos);
-              setLoading(false);
-              return;
-            }
-          }
-        } catch {
-          // Fall through to error
-        }
       }
 
       setError("No transcripts found for this channel. Transcripts need to be processed first — check back later or contact support to request a channel.");
