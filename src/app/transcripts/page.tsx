@@ -64,6 +64,7 @@ export default function TranscriptsPage() {
 
       // Step 1: Try Railway to resolve the handle to a real channel ID
       try {
+        console.log("Resolving channel via Railway:", channelId);
         const response = await fetch("https://content-machine-production-a06b.up.railway.app/api/transcripts/fetch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -72,20 +73,57 @@ export default function TranscriptsPage() {
 
         if (response.ok) {
           const data = await response.json();
+          console.log("Railway resolved:", data.channel_id, data.channel_name);
           if (data.channel_id) resolvedChannelId = data.channel_id;
           if (data.channel_name) resolvedChannelName = data.channel_name;
+        } else {
+          console.log("Railway returned:", response.status);
         }
-      } catch {
-        // Railway failed, continue with raw handle
+      } catch (e) {
+        console.log("Railway error:", e);
       }
 
-      // Step 2: Search Supabase with resolved channel ID, raw handle, and channel name
-      const { data: dbResults } = await supabase
-        .from("channel_video_transcripts")
-        .select("*")
-        .or(`channel_id.eq.${resolvedChannelId},channel_id.eq.${channelId},channel_name.ilike.%${handle}%`)
-        .order("view_count", { ascending: false })
-        .limit(topN);
+      console.log("Searching Supabase with:", { resolvedChannelId, channelId, handle });
+
+      // Step 2: Search Supabase - try multiple approaches
+      // First try with resolved channel ID
+      let dbResults = null;
+      
+      if (resolvedChannelId !== channelId) {
+        const res = await supabase
+          .from("channel_video_transcripts")
+          .select("*")
+          .eq("channel_id", resolvedChannelId)
+          .order("view_count", { ascending: false })
+          .limit(topN);
+        console.log("Supabase by resolved ID:", res.data?.length, res.error);
+        if (res.data && res.data.length > 0) dbResults = res.data;
+      }
+
+      // Then try by raw channel ID
+      if (!dbResults) {
+        const res = await supabase
+          .from("channel_video_transcripts")
+          .select("*")
+          .eq("channel_id", channelId)
+          .order("view_count", { ascending: false })
+          .limit(topN);
+        console.log("Supabase by raw ID:", res.data?.length, res.error);
+        if (res.data && res.data.length > 0) dbResults = res.data;
+      }
+
+      // Then try by channel name
+      if (!dbResults) {
+        const searchName = resolvedChannelName || handle;
+        const res = await supabase
+          .from("channel_video_transcripts")
+          .select("*")
+          .ilike("channel_name", `%${searchName}%`)
+          .order("view_count", { ascending: false })
+          .limit(topN);
+        console.log("Supabase by name:", searchName, res.data?.length, res.error);
+        if (res.data && res.data.length > 0) dbResults = res.data;
+      }
 
       if (dbResults && dbResults.length > 0) {
         setChannelName(dbResults[0].channel_name || resolvedChannelName || channelId);
