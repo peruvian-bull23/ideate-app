@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import Navbar from "@/components/Navbar";
 
-interface VideoResult {
+interface VideoTranscript {
+  id: string;
   video_id: string;
   channel_id: string;
   channel_name: string;
@@ -16,23 +17,14 @@ interface VideoResult {
   fetched_at: string;
 }
 
-interface ApiResponse {
-  channel_id: string;
-  channel_name: string;
-  total_videos: number;
-  fetched: number;
-  videos: VideoResult[];
-}
-
 export default function TranscriptsPage() {
   const [channelUrl, setChannelUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [videos, setVideos] = useState<VideoResult[]>([]);
+  const [videos, setVideos] = useState<VideoTranscript[]>([]);
   const [channelName, setChannelName] = useState("");
-  const [channelId, setChannelId] = useState("");
   const [error, setError] = useState("");
   const [topN, setTopN] = useState(25);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -43,6 +35,21 @@ export default function TranscriptsPage() {
     checkAuth();
   }, []);
 
+  function extractChannelId(url: string): string {
+    let id = url.trim();
+    const patterns = [
+      /youtube\.com\/channel\/([a-zA-Z0-9_-]+)/,
+      /youtube\.com\/@([a-zA-Z0-9_-]+)/,
+      /youtube\.com\/c\/([a-zA-Z0-9_-]+)/,
+      /youtube\.com\/user\/([a-zA-Z0-9_-]+)/,
+    ];
+    for (const p of patterns) {
+      const m = url.match(p);
+      if (m) { id = m[1]; break; }
+    }
+    return id;
+  }
+
   async function fetchTranscripts() {
     setLoading(true);
     setError("");
@@ -50,41 +57,54 @@ export default function TranscriptsPage() {
     setChannelName("");
 
     try {
-      let channelId = channelUrl.trim();
-      const patterns = [
-        /youtube\.com\/channel\/([a-zA-Z0-9_-]+)/,
-        /youtube\.com\/@([a-zA-Z0-9_-]+)/,
-        /youtube\.com\/c\/([a-zA-Z0-9_-]+)/,
-        /youtube\.com\/user\/([a-zA-Z0-9_-]+)/,
-      ];
-      for (const p of patterns) {
-        const m = channelUrl.match(p);
-        if (m) { channelId = m[1]; break; }
+      const channelId = extractChannelId(channelUrl);
+      const handle = channelId.replace(/^@/, "");
+
+      // Try to find transcripts in database - search by channel_id or channel_name
+      const { data: dbResults } = await supabase
+        .from("channel_video_transcripts")
+        .select("*")
+        .or(`channel_id.eq.${channelId},channel_name.ilike.%${handle}%`)
+        .order("view_count", { ascending: false })
+        .limit(topN);
+
+      if (dbResults && dbResults.length > 0) {
+        setChannelName(dbResults[0].channel_name || channelId);
+        setVideos(dbResults);
+        setLoading(false);
+        return;
       }
 
-      const response = await fetch("https://content-machine-production-a06b.up.railway.app/api/transcripts/fetch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ channel_id: channelId, top_n: topN }),
-      });
+      // If not in database, try Railway endpoint to at least get the video list
+      try {
+        const response = await fetch("https://content-machine-production-a06b.up.railway.app/api/transcripts/fetch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ channel_id: channelId, top_n: topN }),
+        });
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Request failed (${response.status})`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.videos && data.videos.length > 0) {
+            setChannelName(data.channel_name || channelId);
+            setVideos(data.videos);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // Railway endpoint failed, continue to error message
       }
 
-      const data: ApiResponse = await response.json();
-      setChannelName(data.channel_name || channelId);
-      setChannelId(channelId);
-      setVideos(data.videos || []);
+      setError("No transcripts found for this channel. Transcripts need to be processed first — check back later or contact support to request a channel.");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch transcripts. Please try again.");
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     }
 
     setLoading(false);
   }
 
-  function downloadTranscript(video: VideoResult) {
+  function downloadTranscript(video: VideoTranscript) {
     if (!video.transcript) return;
     const content = [
       video.title, "=".repeat(video.title.length), "",
@@ -124,6 +144,30 @@ export default function TranscriptsPage() {
     URL.revokeObjectURL(url);
   }
 
+  async function downloadPdfZip() {
+    setDownloadingPdf(true);
+    setError("");
+    try {
+      const channelId = extractChannelId(channelUrl);
+      const response = await fetch("https://content-machine-production-a06b.up.railway.app/api/transcripts/download-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channel_id: channelId, top_n: topN }),
+      });
+      if (!response.ok) throw new Error("PDF generation failed");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `transcripts-${channelName.replace(/[^a-zA-Z0-9]/g, "-")}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("Failed to generate PDFs. Try downloading as text instead.");
+    }
+    setDownloadingPdf(false);
+  }
+
   const fmtNum = (n: number) => {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
     if (n >= 1000) return (n / 1000).toFixed(0) + "K";
@@ -152,7 +196,7 @@ export default function TranscriptsPage() {
               value={channelUrl}
               onChange={(e) => setChannelUrl(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !loading) fetchTranscripts(); }}
-              placeholder="Paste YouTube channel URL or channel ID"
+              placeholder="Paste YouTube channel URL or @handle"
               className="flex-1 px-4 py-3 rounded-md text-base"
               style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-default)", color: "var(--text-primary)", outline: "none" }}
               disabled={loading}
@@ -163,7 +207,7 @@ export default function TranscriptsPage() {
               className="px-6 py-3 rounded-md text-base font-semibold disabled:opacity-50"
               style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
             >
-              {loading ? "Fetching..." : "Pull Transcripts"}
+              {loading ? "Searching..." : "Pull Transcripts"}
             </button>
           </div>
           <div className="flex items-center gap-4">
@@ -187,12 +231,12 @@ export default function TranscriptsPage() {
           {error && <p className="text-base mt-3" style={{ color: "var(--red)" }}>{error}</p>}
         </div>
 
-        {/* Loading state */}
+        {/* Loading */}
         {loading && (
           <div className="rounded-lg p-8 text-center" style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}>
             <div className="inline-block w-8 h-8 border-2 rounded-full animate-spin mb-3" style={{ borderColor: "var(--border-default)", borderTopColor: "var(--gold)" }} />
             <p className="text-base" style={{ color: "var(--text-tertiary)" }}>
-              Fetching videos and transcripts... This may take a minute.
+              Searching for transcripts...
             </p>
           </div>
         )}
@@ -208,14 +252,16 @@ export default function TranscriptsPage() {
               <div className="flex items-center gap-4">
                 <span className="text-lg font-bold">{channelName}</span>
                 <span className="text-base" style={{ color: "var(--text-muted)" }}>
-                  {videos.length} video{videos.length !== 1 ? "s" : ""} found
+                  {videos.length} video{videos.length !== 1 ? "s" : ""}
                 </span>
-                <span className="text-base font-medium px-2.5 py-0.5 rounded" style={{ color: "var(--green)", background: "var(--green-bg)" }}>
-                  {withTranscripts.length} transcript{withTranscripts.length !== 1 ? "s" : ""}
-                </span>
+                {withTranscripts.length > 0 && (
+                  <span className="text-base font-medium px-2.5 py-0.5 rounded" style={{ color: "var(--green)", background: "var(--green-bg)" }}>
+                    {withTranscripts.length} transcript{withTranscripts.length !== 1 ? "s" : ""}
+                  </span>
+                )}
                 {withoutTranscripts.length > 0 && (
                   <span className="text-base font-medium px-2.5 py-0.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
-                    {withoutTranscripts.length} unavailable
+                    {withoutTranscripts.length} pending
                   </span>
                 )}
               </div>
@@ -232,27 +278,7 @@ export default function TranscriptsPage() {
                     .txt ({withTranscripts.length})
                   </button>
                   <button
-                    onClick={async () => {
-                      setDownloadingPdf(true);
-                      try {
-                        const response = await fetch("https://content-machine-production-a06b.up.railway.app/api/transcripts/download-pdf", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ channel_id: channelId, top_n: topN }),
-                        });
-                        if (!response.ok) throw new Error("PDF generation failed");
-                        const blob = await response.blob();
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = `transcripts-${channelName.replace(/[^a-zA-Z0-9]/g, "-")}.zip`;
-                        a.click();
-                        URL.revokeObjectURL(url);
-                      } catch {
-                        setError("Failed to generate PDFs. Try again.");
-                      }
-                      setDownloadingPdf(false);
-                    }}
+                    onClick={downloadPdfZip}
                     disabled={downloadingPdf}
                     className="flex items-center gap-2 px-4 py-2 rounded-md text-base font-semibold disabled:opacity-50"
                     style={{ background: "var(--gold)", color: "var(--bg-primary)" }}
@@ -266,6 +292,16 @@ export default function TranscriptsPage() {
                 </div>
               )}
             </div>
+
+            {/* No transcripts message */}
+            {withTranscripts.length === 0 && (
+              <div className="rounded-lg p-6 mb-6" style={{ background: "var(--gold-bg)", border: "1px solid var(--gold-border)" }}>
+                <p className="text-base font-medium" style={{ color: "var(--gold)" }}>
+                  Videos found but transcripts haven&apos;t been processed yet for this channel.
+                  Transcripts are generated locally and may take some time to appear. Check back later.
+                </p>
+              </div>
+            )}
 
             {/* Video list */}
             <div className="space-y-2">
@@ -283,12 +319,7 @@ export default function TranscriptsPage() {
                     <span className="text-base font-mono font-bold shrink-0 w-8" style={{ color: "var(--text-muted)" }}>
                       {i + 1}
                     </span>
-                    <a
-                      href={`https://www.youtube.com/watch?v=${v.video_id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0"
-                    >
+                    <a href={`https://www.youtube.com/watch?v=${v.video_id}`} target="_blank" rel="noopener noreferrer" className="shrink-0">
                       <img src={v.thumbnail} alt="" className="w-28 h-[63px] object-cover rounded-md" />
                     </a>
                     <div className="flex-1 min-w-0">
@@ -301,9 +332,7 @@ export default function TranscriptsPage() {
                         {v.title}
                       </a>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-base font-mono" style={{ color: "var(--text-muted)" }}>
-                          {fmtNum(v.view_count)} views
-                        </span>
+                        <span className="text-base font-mono" style={{ color: "var(--text-muted)" }}>{fmtNum(v.view_count)} views</span>
                         {v.published_at && (
                           <span className="text-base" style={{ color: "var(--text-muted)" }}>
                             {new Date(v.published_at).toLocaleDateString()}
@@ -330,7 +359,7 @@ export default function TranscriptsPage() {
                         </button>
                       ) : (
                         <span className="text-base px-3 py-1.5 rounded" style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}>
-                          No transcript
+                          Pending
                         </span>
                       )}
                     </div>
