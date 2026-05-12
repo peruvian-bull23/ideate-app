@@ -25,6 +25,8 @@ export default function TranscriptsPage() {
   const [error, setError] = useState("");
   const [topN, setTopN] = useState(25);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [selectedForDelete, setSelectedForDelete] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -186,6 +188,42 @@ export default function TranscriptsPage() {
     setDownloadingPdf(false);
   }
 
+  function toggleSelect(videoId: string) {
+    setSelectedForDelete((prev) => {
+      const next = new Set(prev);
+      if (next.has(videoId)) next.delete(videoId); else next.add(videoId);
+      return next;
+    });
+  }
+
+  function selectAllShorts() {
+    // Select videos that are likely Shorts (transcript under 1500 chars or title contains #shorts)
+    const shortIds = videos.filter((v) =>
+      v.transcript && (v.transcript.length < 1500 || v.title.toLowerCase().includes("#short"))
+    ).map((v) => v.video_id);
+    setSelectedForDelete(new Set(shortIds));
+  }
+
+  async function deleteSelected() {
+    if (selectedForDelete.size === 0) return;
+    setDeleting(true);
+
+    const ids = [...selectedForDelete];
+    await supabase
+      .from("channel_video_transcripts")
+      .delete()
+      .in("video_id", ids);
+
+    setVideos((prev) => prev.filter((v) => !selectedForDelete.has(v.video_id)));
+    setSelectedForDelete(new Set());
+    setDeleting(false);
+  }
+
+  async function deleteSingle(videoId: string) {
+    await supabase.from("channel_video_transcripts").delete().eq("video_id", videoId);
+    setVideos((prev) => prev.filter((v) => v.video_id !== videoId));
+  }
+
   const fmtNum = (n: number) => {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
     if (n >= 1000) return (n / 1000).toFixed(0) + "K";
@@ -321,6 +359,53 @@ export default function TranscriptsPage() {
               </div>
             )}
 
+            {/* Bulk actions bar */}
+            <div
+              className="rounded-lg px-5 py-3 mb-3 flex items-center justify-between"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border-subtle)" }}
+            >
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    if (selectedForDelete.size === videos.length) {
+                      setSelectedForDelete(new Set());
+                    } else {
+                      setSelectedForDelete(new Set(videos.map((v) => v.video_id)));
+                    }
+                  }}
+                  className="text-base font-medium"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {selectedForDelete.size === videos.length ? "Deselect All" : "Select All"}
+                </button>
+                <button
+                  onClick={selectAllShorts}
+                  className="text-base font-medium px-3 py-1 rounded"
+                  style={{ color: "var(--text-muted)", background: "var(--bg-elevated)" }}
+                >
+                  Select Shorts
+                </button>
+                {selectedForDelete.size > 0 && (
+                  <span className="text-base font-mono" style={{ color: "var(--gold)" }}>
+                    {selectedForDelete.size} selected
+                  </span>
+                )}
+              </div>
+              {selectedForDelete.size > 0 && (
+                <button
+                  onClick={deleteSelected}
+                  disabled={deleting}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-md text-base font-semibold disabled:opacity-50"
+                  style={{ color: "#fff", background: "var(--red)" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                  </svg>
+                  {deleting ? "Deleting..." : `Delete (${selectedForDelete.size})`}
+                </button>
+              )}
+            </div>
+
             {/* Video list */}
             <div className="space-y-2">
               {videos.map((v, i) => (
@@ -334,6 +419,20 @@ export default function TranscriptsPage() {
                   }}
                 >
                   <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => toggleSelect(v.video_id)}
+                      className="shrink-0 w-5 h-5 rounded border flex items-center justify-center"
+                      style={{
+                        borderColor: selectedForDelete.has(v.video_id) ? "var(--gold)" : "var(--border-default)",
+                        background: selectedForDelete.has(v.video_id) ? "var(--gold)" : "transparent",
+                      }}
+                    >
+                      {selectedForDelete.has(v.video_id) && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--bg-primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </button>
                     <span className="text-base font-mono font-bold shrink-0 w-8" style={{ color: "var(--text-muted)" }}>
                       {i + 1}
                     </span>
@@ -363,7 +462,7 @@ export default function TranscriptsPage() {
                         )}
                       </div>
                     </div>
-                    <div className="shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                       {v.transcript ? (
                         <button
                           onClick={() => downloadTranscript(v)}
@@ -380,6 +479,18 @@ export default function TranscriptsPage() {
                           Pending
                         </span>
                       )}
+                      <button
+                        onClick={() => deleteSingle(v.video_id)}
+                        className="p-1.5 rounded-md"
+                        style={{ color: "var(--text-muted)" }}
+                        title="Delete transcript"
+                        onMouseEnter={(e) => { e.currentTarget.style.color = "var(--red)"; e.currentTarget.style.background = "var(--red-bg)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "transparent"; }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
                 </div>
