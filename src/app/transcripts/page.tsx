@@ -63,6 +63,8 @@ export default function TranscriptsPage() {
       // Search Supabase with multiple strategies
       let dbResults: VideoTranscript[] | null = null;
 
+      const limitN = topN > 0 ? topN : 1000;
+
       // Try exact channel_id match (works for UC... IDs)
       if (!dbResults) {
         const res = await supabase
@@ -71,7 +73,7 @@ export default function TranscriptsPage() {
           .eq("channel_id", channelId)
           .not("transcript", "is", null)
           .order("view_count", { ascending: false })
-          .limit(topN);
+          .limit(limitN);
         if (res.data && res.data.length > 0) dbResults = res.data;
       }
 
@@ -83,7 +85,7 @@ export default function TranscriptsPage() {
           .ilike("channel_name", `%${handle}%`)
           .not("transcript", "is", null)
           .order("view_count", { ascending: false })
-          .limit(topN);
+          .limit(limitN);
         if (res.data && res.data.length > 0) dbResults = res.data;
       }
 
@@ -97,7 +99,7 @@ export default function TranscriptsPage() {
             .ilike("channel_name", `%${prefix}%`)
             .not("transcript", "is", null)
             .order("view_count", { ascending: false })
-            .limit(topN);
+            .limit(limitN);
           if (res.data && res.data.length > 0) {
             dbResults = res.data;
             break;
@@ -228,7 +230,7 @@ export default function TranscriptsPage() {
           </div>
           <div className="flex items-center gap-4">
             <label className="text-base" style={{ color: "var(--text-muted)" }}>Top videos:</label>
-            {[10, 25, 50].map((n) => (
+            {[10, 25, 50, 0].map((n) => (
               <button
                 key={n}
                 onClick={() => setTopN(n)}
@@ -240,7 +242,7 @@ export default function TranscriptsPage() {
                   border: topN === n ? "1px solid var(--gold-border)" : "1px solid transparent",
                 }}
               >
-                {n}
+                {n === 0 ? "All" : n}
               </button>
             ))}
           </div>
